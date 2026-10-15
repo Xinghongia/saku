@@ -94,6 +94,44 @@ class AuthApiTest {
     }
 
     @Test
+    fun `环境异常类响应（实测原文）映射为 NeedsCaptcha`() {
+        // 2026-10-15 实测：缺少滑块数据 / 拖动未对齐时服务端的真实响应
+        val missing = AuthApi.parseSigninResponse(200, """{"error":1,"msg":"环境异常，请刷新后重新提交"}""")
+        val misaligned = AuthApi.parseSigninResponse(200, """{"error":1,"msg":"环境异常，人机验证失败"}""")
+
+        assertTrue(missing is AuthApi.SigninResult.NeedsCaptcha)
+        assertTrue(misaligned is AuthApi.SigninResult.NeedsCaptcha)
+    }
+
+    @Test
+    fun `signIn 带滑块数据时按 jQuery 嵌套格式提交 captcha 字段族`() = runBlocking {
+        server.enqueue(MockResponse.Builder().code(200).body(fixture("signin_page_sample.html")).build())
+        server.enqueue(MockResponse.Builder().code(200).body("""{"error":0,"reload":1,"msg":"成功登录，页面跳转中"}""").build())
+        val solution = SliderCaptcha.Solution(
+            ticket = "34oibiwrp92griym26",
+            randstr = "276b5b8a09bab55a317668d325",
+            spliced = true,
+            trail = listOf(0, 0, -1, 0, 1),
+            check = "35854c6d05a74f594037aa816a3c0a0d",
+        )
+
+        val result = auth.signIn("tester", "secret", solution)
+
+        assertEquals(AuthApi.SigninResult.Success("成功登录，页面跳转中"), result)
+
+        server.takeRequest() // 登录页
+        val postRequest = server.takeRequest()
+        val fields = java.net.URLDecoder.decode(postRequest.body!!.utf8(), "UTF-8")
+            .split("&")
+            .associate { it.substringBefore("=") to it.substringAfter("=") }
+        assertEquals("34oibiwrp92griym26", fields["captcha[ticket]"])
+        assertEquals("276b5b8a09bab55a317668d325", fields["captcha[randstr]"])
+        assertEquals("true", fields["captcha[spliced]"])
+        assertEquals("[0,0,-1,0,1]", fields["captcha[trail]"])
+        assertEquals("35854c6d05a74f594037aa816a3c0a0d", fields["captcha[check]"])
+    }
+
+    @Test
     fun `登录被拒时返回站点给出的原因`() {
         val result = AuthApi.parseSigninResponse(200, """{"error":1,"msg":"密码错误"}""")
 

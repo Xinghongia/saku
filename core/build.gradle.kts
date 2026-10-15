@@ -10,7 +10,9 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.okhttp)
+    // api：SakuClient 公开暴露 OkHttpClient 类型，app 端需要按同一版本编译
+    // （否则 app 会误用 coil 传递的 okhttp 4.x，编译 API 与运行版本不一致）
+    api(libs.okhttp)
     implementation(libs.jsoup)
     // api：StoredCookie / SakuJson 是 core 的公开 API，上层（app）要用到序列化类型
     api(libs.kotlinx.serialization.json)

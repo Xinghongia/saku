@@ -18,7 +18,9 @@ updated: 2026-10-15
 
 - 站点 = WordPress + zibll v9.1；**双通道**：REST（结构化）+ 页面 HTML 解析（主题数据）
 - 下载链：`?golink=<base64>&nonce=` → 跳转页 `location.href` = 真实网盘地址
-- 登录：`/user-sign?tab=signin` → `admin-ajax.php` `action=user_signin`；滑块实测未强制
+- 登录：`/user-sign?tab=signin` → `admin-ajax.php` `action=user_signin`；**滑块验证为强制**
+  （服务端校验拖动位置与缺口对齐，容差 <8px，实测 6px 过 / 50px 拒）；
+  客户端已复刻网页流程（`SliderCaptcha`，数据全部来自用户真实拖动，不绕过），真机登录成功
 - 本机工具链：JDK 21（`D:\Java`）、SDK（`D:\AndroidStudiozy`）、Gradle 9.3.1、代理 7897
 
 ## 最近证据
@@ -27,22 +29,31 @@ updated: 2026-10-15
 - **v0.2（P5 数据补全 + P6 UI 重构）**：
   - `core`：`SiteApi`（卡片/封面兜底/徽章/多级分类/标签/作者/统计/排序/分页）、
     `CategoryTree`（二级分类树）、`ContentParser` 内链、`WpApi.comments`
-  - 单测：**62 项全绿**（新增 SiteApi、CategoryTree、正文内链用例；样本来自 .probe 脱敏副本）
   - `app`：Navigation Compose 底部导航（首页/分类/搜索/我的）、Material 3 深浅色 + 动态取色、
     新卡片、分类树、详情页（作者/统计/面包屑/标签/内链/评论）、排序 chips + 分页 + 跳页
   - 真机截图：`docs/screenshots/10-ui-home.png` ~ `14-ui-profile.png`
+  - 驾驶员已确认（"ok，没问题拉"）
+- **v0.3（登录滑块验证）**：
+  - `core`：`SliderCaptcha`（出题/编码/坐标数学/凭据换取，按 zibll 前端算法 1:1 复刻）、
+    `AuthApi.signIn(captcha=)`；单测 **76 项全绿**
+  - `app`：`SliderCaptchaDialog`（Compose 拼图 + 真实拖动轨迹）、登录成功自动返回、
+    「我的」页按登录态显示入口
+  - 真机登录成功（截图 `15-login-success.png`、`16-profile-logged-in.png`）；
+    **驾驶员已验收**：退出登录 → 重新登录成功 → 自动返回（含滑块弹窗全流程）
 
 ## 开放风险
 
-- 登录态下 REST 的 cookie 认证（X-WP-Nonce）路径未定 → 影响点赞/评论/签到/收藏；待驾驶员账号验证
-- 登录响应 JSON 结构未经真机验证（宽松解析）
+- 登录态下 REST 的 cookie 认证（X-WP-Nonce）路径未定 → 影响点赞/评论/签到/收藏
 - 详情页偶发 "timeout"（站点侧慢），已有重试；频繁出现则改分步加载
-- zibll 升级会导致 golink/页面解析失效 → 需重新抽样
+- zibll 升级会导致 golink/页面解析/滑块编码失效 → 需重新抽样
 
 ## 下一道门
 
-**等驾驶员确认 v0.2**（装机试用 + 反馈；特别是新 UI 观感与卡片信息是否符合预期）。
-确认后进入 **P6 剩余社交功能**：点赞、发表评论、签到、收藏 —— 先解决登录态的 REST/写操作通道。
+**v0.3 已由驾驶员验收（2026-10-15 晚）**。进入 **P6 剩余 + 扩张清单**（驾驶员指定 2026-10-16 晚继续）：
+1. 用户中心（我的页完善：账号信息、签到、收藏入口）
+2. 设置页面（新页面：主题、缓存、关于等）
+3. 升级版 UI（按驾驶员审美迭代）
+4. 更多更详细的网站原生功能（社交写操作：点赞、评论、签到、收藏 —— 先解决 X-WP-Nonce 通道）
 
 ## 一句续接
 

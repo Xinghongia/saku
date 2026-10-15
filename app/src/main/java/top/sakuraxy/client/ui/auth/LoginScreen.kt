@@ -22,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.vm.LoginViewModel
 
@@ -37,6 +39,14 @@ import top.sakuraxy.client.vm.LoginViewModel
 fun LoginScreen(app: SakuApp, onBack: () -> Unit) {
     val vm: LoginViewModel = viewModel { LoginViewModel(app) }
     val state by vm.state.collectAsState()
+
+    // 登录成功后短暂展示成功提示，然后自动返回上一页（不再让用户手动退出登录页）
+    LaunchedEffect(state.result) {
+        if (state.result is LoginViewModel.LoginResult.Success) {
+            delay(900)
+            onBack()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -98,7 +108,7 @@ fun LoginScreen(app: SakuApp, onBack: () -> Unit) {
                 is LoginViewModel.LoginResult.NeedsCaptcha -> {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "站点要求滑块验证：${result.message}\n当前版本暂不支持滑块验证，请先用网页登录。",
+                        "需要完成滑块验证：${result.message}",
                         color = Color(0xFFB26A00),
                     )
                 }
@@ -110,6 +120,15 @@ fun LoginScreen(app: SakuApp, onBack: () -> Unit) {
 
                 null -> Unit
             }
+        }
+
+        // 滑块验证弹窗：站点要求滑块时出现（数据来自用户真实拖动，见 SliderCaptchaDialog）
+        if (state.showSlider) {
+            SliderCaptchaDialog(
+                httpClient = app.client.http,
+                onDismiss = vm::dismissSlider,
+                onSolved = vm::loginWith,
+            )
         }
     }
 }

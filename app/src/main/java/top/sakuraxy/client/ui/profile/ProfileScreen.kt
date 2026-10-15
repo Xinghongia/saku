@@ -116,7 +116,10 @@ fun ProfileScreen(
             }
 
             // 功能入口（登录相关功能占位说明，功能本身按 P6 排期实现）
-            EntryItem(Icons.Outlined.Login, "登录 / 切换账号", onOpenLogin)
+            // 已登录时不再显示登录入口（与网页一致：登录后显示账号态而非登录按钮）
+            if (!loggedIn) {
+                EntryItem(Icons.Outlined.Login, "登录 / 切换账号", onOpenLogin)
+            }
             EntryItem(Icons.Outlined.CalendarMonth, "每日签到", null)
             EntryItem(Icons.Outlined.FavoriteBorder, "我的收藏", null)
             EntryItem(Icons.Outlined.Info, "关于", null)

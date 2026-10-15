@@ -12,9 +12,14 @@ import org.jsoup.Jsoup
 /**
  * 登录（zibll 主题的 admin-ajax 流程）。
  *
- * 2026-10-15 实测（research/probe/signin.html）：登录表单位于 /user-sign?tab=signin，
- * 提交到 admin-ajax.php，字段含 username / password / remember / captcha_mode / action=user_signin。
- * 滑块验证（captcha_mode=slider）在实测中未强制；客户端不绕过验证，被拦截时如实上报（P4 真机验证）。
+ * 2026-10-15 实测（research/probe/signin.html + curl 全流程复现）：
+ * 登录表单位于 /user-sign?tab=signin，提交到 admin-ajax.php，
+ * 字段含 username / password / remember / captcha_mode / action=user_signin。
+ *
+ * 第二次实测确认站点启用了滑块验证（captcha_mode=slider）：
+ * 不带滑块数据提交会得到「环境异常，请刷新后重新提交」，拖动偏离缺口会被拒
+ * 「环境异常，人机验证失败」；带完整真实拖动数据可正常登录。
+ * 滑块数据由 [SliderCaptcha] 依网页算法生成，数据全部来自用户真实拖动，不伪造。
  */
 class AuthApi(
     private val client: OkHttpClient,
@@ -30,7 +35,7 @@ class AuthApi(
     sealed interface SigninResult {
         data class Success(val message: String) : SigninResult
 
-        /** 站点要求完成滑块/图形验证（客户端暂不支持，如实上报） */
+        /** 站点要求完成滑块验证（数据缺失/过期/拖动未对齐）；用 [SliderCaptcha] 重新走一遍 */
         data class NeedsCaptcha(val message: String) : SigninResult
 
         data class Failure(val message: String) : SigninResult
@@ -61,16 +66,29 @@ class AuthApi(
     /**
      * 模拟站点登录表单提交。成功后 cookie 由 Session 自动保存。
      *
-     * 注意：站点真实响应结构尚未经过真机验证（见 NEXT.md 开放风险）；
-     * 此处按「HTTP 200 + JSON，error=0 为成功」宽松解析，未知结构一律如实上报失败。
+     * @param captcha 滑块验证数据（[SliderCaptcha.solve] 生成）；站点要求滑块时必须提供，
+     *   否则服务端返回「环境异常」。对应网页把 window.captcha 对象并入表单数据的行为。
      */
-    suspend fun signIn(username: String, password: String): SigninResult {
+    suspend fun signIn(
+        username: String,
+        password: String,
+        captcha: SliderCaptcha.Solution? = null,
+    ): SigninResult {
         require(username.isNotBlank() && password.isNotBlank()) { "用户名和密码不能为空" }
         val page = fetchSigninPage()
         val form = FormBody.Builder()
         page.formFields.forEach { (name, value) -> if (name != "action") form.add(name, value) }
         form.add("username", username)
         form.add("password", password)
+        captcha?.let {
+            // jQuery 序列化嵌套对象：captcha[ticket]=… 与网页提交格式一致
+            form.add("captcha[ticket]", it.ticket)
+            form.add("captcha[randstr]", it.randstr)
+            form.add("captcha[spliced]", it.spliced.toString())
+            // 与 JS JSON.stringify([1,2]) 相同的紧凑数组格式
+            form.add("captcha[trail]", it.trail.joinToString(",", "[", "]"))
+            form.add("captcha[check]", it.check)
+        }
         form.add("action", "user_signin")
         val url = "$baseUrl/wp-admin/admin-ajax.php".toHttpUrl()
         val response = client.postForm(url, form.build())
@@ -98,7 +116,11 @@ class AuthApi(
             }
         }
 
+        /**
+         * 服务端把「环境异常，请刷新后重新提交」（缺滑块数据）与
+         * 「环境异常，人机验证失败」（拖动未对齐）都归入需要重新走滑块的类别。
+         */
         private fun String.looksLikeCaptcha(): Boolean =
-            listOf("验证", "captcha", "滑动", "拼图").any { contains(it, ignoreCase = true) }
+            listOf("验证", "captcha", "滑动", "拼图", "环境异常").any { contains(it, ignoreCase = true) }
     }
 }
