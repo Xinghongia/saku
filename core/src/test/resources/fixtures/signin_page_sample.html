@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<title>登录 - 示例</title>
+</head>
+<body>
+<div class="sign-form">
+    <form>
+        <div class="relative line-form mb10">
+            <input type="text" name="username" class="line-form-input" tabindex="1" placeholder="">
+        </div>
+        <div class="relative line-form mb10">
+            <input type="password" name="password" class="line-form-input" tabindex="2" placeholder="">
+        </div>
+        <input machine-verification="slider" type="hidden" name="captcha_mode" value="slider" slider-id="">
+        <input type="checkbox" id="remember" checked="checked" tabindex="4" name="remember" value="forever">
+        <input type="hidden" name="action" value="user_signin">
+        <button type="button" class="but jb-pink">登录</button>
+    </form>
+</div>
+<div class="sign-form">
+    <form id="sign-up">
+        <input type="hidden" id="_wpnonce" name="_wpnonce" value="deadbeef01" />
+        <input type="text" name="name" class="line-form-input" tabindex="1" placeholder="">
+        <input type="hidden" name="action" value="user_signup">
+    </form>
+</div>
+</body>
+</html>

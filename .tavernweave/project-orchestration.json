@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "authoritySchema": "tavernweave/project-orchestration/v1",
+  "projectId": "saku-android-client",
+  "title": "sakuraxy 第三方安卓客户端",
+  "profile": "single-blueprint",
+  "state": "automated-evidence",
+  "authorityFile": "总设计案.md",
+  "nextFile": "NEXT.md",
+  "blueprintPolicy": {
+    "masterFile": "项目实现步骤蓝图.md",
+    "maxDepth": 1,
+    "maxChildren": 0,
+    "runtimePersistentBlueprintBudget": 0,
+    "blueprints": [
+      {
+        "id": "BP-ROOT",
+        "path": "项目实现步骤蓝图.md",
+        "parentId": null,
+        "depth": 1,
+        "status": "active"
+      }
+    ]
+  },
+  "runtimeRefinementPolicy": {
+    "trigger": "observed-problem-or-failed-exit-condition",
+    "maxDepth": 1,
+    "maxOpenBranches": 1,
+    "persistent": false,
+    "mayExpandProductScope": false,
+    "mustReturnToParent": true
+  },
+  "runtimeRefinements": [],
+  "discussionDirections": [
+    {
+      "id": "D1",
+      "topic": "项目定位与承载面",
+      "level": "foundational",
+      "roundLimit": 4,
+      "roundsUsed": 1,
+      "status": "frozen",
+      "decisionIds": ["C1", "C3", "C4"]
+    },
+    {
+      "id": "D2",
+      "topic": "登录与会话方式",
+      "level": "core",
+      "roundLimit": 3,
+      "roundsUsed": 1,
+      "status": "frozen",
+      "decisionIds": ["C2"]
+    },
+    {
+      "id": "D3",
+      "topic": "首版范围与红线",
+      "level": "core",
+      "roundLimit": 3,
+      "roundsUsed": 2,
+      "status": "frozen",
+      "decisionIds": ["P1", "P2", "P3", "P4", "P5"]
+    },
+    {
+      "id": "D4",
+      "topic": "界面结构与交互细节",
+      "level": "standard",
+      "roundLimit": 2,
+      "roundsUsed": 0,
+      "status": "active",
+      "decisionIds": []
+    }
+  ],
+  "frontendDecision": {
+    "recommended": "independent-ui",
+    "fit": "suitable",
+    "reason": "核心循环本身就是界面行为（浏览→详情→取下载链接），安卓原生 App 是正解",
+    "fallback": "轻量 WebView 壳，若原生登录被滑块长期阻塞作为兜底",
+    "reopenWhen": "原生登录路径被证实长期不可用且站点无备用登录通道",
+    "driverOverride": false,
+    "prototypeGateRequired": false,
+    "realHostGateRequired": false
+  },
+  "acceptance": {
+    "automated": "passed",
+    "staticPreview": "passed",
+    "realHost": "passed",
+    "driver": {
+      "status": "accepted",
+      "source": "driver"
+    }
+  }
+}

@@ -1,0 +1,284 @@
+{
+  "id": 10000,
+  "date": "2026-10-14T23:55:17",
+  "date_gmt": "2026-10-14T15:55:17",
+  "guid": {
+    "rendered": "https://www.example.com/?p=10000"
+  },
+  "modified": "2026-10-14T23:55:36",
+  "modified_gmt": "2026-10-14T15:55:36",
+  "slug": "sample-post-1",
+  "status": "publish",
+  "type": "post",
+  "link": "https://www.example.com/10000.html",
+  "title": {
+    "rendered": "[示例] 测试资源标题 1"
+  },
+  "content": {
+    "rendered": "\n<p class=\"wp-block-paragraph\">示例资源简介文本（用于解析测试）。</p>\n\n<h2 class=\"wp-block-heading\" id=\"h-示例标题\">示例标题</h2>\n\n<figure class=\"wp-block-image size-large\"><img alt=\"图片[1]-示例\" decoding=\"async\" src=\"https://www.example.com/wp-content/themes/zibll/img/thumbnail-lg.svg\" data-src=\"https://www.example.com/wp-content/uploads/2025/12/img-1024x759.jpg\"   class=\"wp-image-10880\" /></figure>\n\n<p class=\"wp-block-paragraph\"><strong>免责声明：</strong>示例加粗文本<br>第二行内容</p>\n\n<hr class=\"wp-block-separator has-alpha-channel-opacity\" />\n\n<div class=\"wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex\">\n<div class=\"wp-block-button\"><a class=\"wp-block-button__link wp-element-button\" href=\"https://www.example.com/?golink=aHR0cHM6Ly9wYW4uZXhhbXBsZS5jb20vcy9URVNUMTIzND9wd2Q9VEVTVA==&#038;nonce=deadbeef00\"  target=\"_blank\" rel=\"noreferrer noopener\">网盘下载</a></div>\n\n<div class=\"wp-block-button\"><a class=\"wp-block-button__link wp-element-button\" href=\"/?golink=aHR0cHM6Ly9wbGF5LmV4YW1wbGUuY29tL3N0b3JlL2FwcHMvZGV0YWlscz9pZD10ZXN0LmFwcA==&#038;nonce=deadbeef00\"  target=\"_blank\" rel=\"noreferrer noopener\">备用源</a></div>\n</div>\n\n<p class=\"wp-block-paragraph\"><a href=\"https://www.example.com/10879\" rel=\"noreferrer noopener\">相关链接（无下载参数）</a></p>\n"
+  },
+  "excerpt": {
+    "rendered": "<p>示例摘要文本。</p>\n"
+  },
+  "author": 2290,
+  "featured_media": 12345,
+  "comment_status": "open",
+  "ping_status": "open",
+  "sticky": false,
+  "template": "",
+  "format": "standard",
+  "meta": {
+    "footnotes": ""
+  },
+  "categories": [
+    24
+  ],
+  "tags": [
+    30
+  ],
+  "topics": [],
+  "class_list": [
+    "post-10879",
+    "post",
+    "type-post",
+    "status-publish",
+    "format-standard",
+    "has-post-thumbnail",
+    "hentry",
+    "category-android-tools",
+    "tag-google-play",
+    "tag-wps-office",
+    "tag-314",
+    "tag-1939",
+    "tag-210",
+    "tag-232",
+    "tag-854",
+    "tag-229",
+    "tag-656",
+    "tag-166",
+    "tag-154"
+  ],
+  "yoast_head": "<!-- This site is optimized with the Yoast SEO Premium plugin v27.9 (Yoast SEO v27.9) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->\n<title>【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play - SakuraXy</title>\n<meta name=\"description\" content=\"WPS Office for Android，金山WPS移动版，免费安卓办公软件套装，体积小、速度快。独有手机阅读模式，字体清晰翻页流畅；完美支持文字/表格/演示/PDF等51种文档格式；新版海量精美模版及高级功能。\" />\n<meta name=\"robots\" content=\"index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<link rel=\"canonical\" href=\"https://www.sakuraxy.top/10879\" />\n<meta property=\"og:locale\" content=\"zh_CN\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play\" />\n<meta property=\"og:description\" content=\"WPS Office for Android，金山WPS移动版，免费安卓办公软件套装，体积小、速度快。独有手机阅读模式，字体清晰翻页流畅；完美支持文字/表格/演示/PDF等51种文档格式；新版海量精美模版及高级功能。\" />\n<meta property=\"og:url\" content=\"https://www.sakuraxy.top/10879\" />\n<meta property=\"og:site_name\" content=\"SakuraXy\" />\n<meta property=\"article:published_time\" content=\"2026-10-14T15:55:17+00:00\" />\n<meta property=\"article:modified_time\" content=\"2026-10-14T15:55:36+00:00\" />\n<meta property=\"og:image\" content=\"https://www.sakuraxy.top/wp-content/uploads/2025/12/1733210759-c4ca4238a0b9238.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1553\" />\n\t<meta property=\"og:image:height\" content=\"800\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"author\" content=\"树上的小狗\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:label1\" content=\"作者\" />\n\t<meta name=\"twitter:data1\" content=\"树上的小狗\" />\n\t<meta name=\"twitter:label2\" content=\"预计阅读时间\" />\n\t<meta name=\"twitter:data2\" content=\"1 分\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"Article\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#article\",\"isPartOf\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879\"},\"author\":{\"name\":\"树上的小狗\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#\\/schema\\/person\\/a93b4347468ced185a69b525ac83fbcd\"},\"headline\":\"【安卓\\/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play\",\"datePublished\":\"2026-10-14T15:55:17+00:00\",\"dateModified\":\"2026-10-14T15:55:36+00:00\",\"mainEntityOfPage\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879\"},\"wordCount\":15,\"commentCount\":0,\"publisher\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#\\/schema\\/person\\/137f85da0d2721284e839631299fc4a7\"},\"image\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#primaryimage\"},\"thumbnailUrl\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/12\\/1733210759-c4ca4238a0b9238.jpg\",\"keywords\":[\"Google play\",\"WPS Office\",\"中文\",\"办公软件\",\"安卓\",\"安卓直装\",\"安卓软件\",\"官中\",\"树上的小狗\",\"正经\",\"软件\"],\"articleSection\":[\"安卓工具\"],\"inLanguage\":\"zh-Hans\",\"potentialAction\":[{\"@type\":\"CommentAction\",\"name\":\"Comment\",\"target\":[\"https:\\/\\/www.sakuraxy.top\\/10879#respond\"]}]},{\"@type\":\"WebPage\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879\",\"url\":\"https:\\/\\/www.sakuraxy.top\\/10879\",\"name\":\"【安卓\\/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play - SakuraXy\",\"isPartOf\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#website\"},\"primaryImageOfPage\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#primaryimage\"},\"image\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#primaryimage\"},\"thumbnailUrl\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/12\\/1733210759-c4ca4238a0b9238.jpg\",\"datePublished\":\"2026-10-14T15:55:17+00:00\",\"dateModified\":\"2026-10-14T15:55:36+00:00\",\"description\":\"WPS Office for Android，金山WPS移动版，免费安卓办公软件套装，体积小、速度快。独有手机阅读模式，字体清晰翻页流畅；完美支持文字\\/表格\\/演示\\/PDF等51种文档格式；新版海量精美模版及高级功能。\",\"breadcrumb\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#breadcrumb\"},\"inLanguage\":\"zh-Hans\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/www.sakuraxy.top\\/10879\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"zh-Hans\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#primaryimage\",\"url\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/12\\/1733210759-c4ca4238a0b9238.jpg\",\"contentUrl\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/12\\/1733210759-c4ca4238a0b9238.jpg\",\"width\":1553,\"height\":800},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/10879#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"首页\",\"item\":\"https:\\/\\/www.sakuraxy.top\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"【安卓\\/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#website\",\"url\":\"https:\\/\\/www.sakuraxy.top\\/\",\"name\":\"玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐\",\"description\":\"免费软件、游戏与动漫资源分享站 - 覆盖Windows\\/Mac\\/安卓多平台\",\"publisher\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#\\/schema\\/person\\/137f85da0d2721284e839631299fc4a7\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/www.sakuraxy.top\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"zh-Hans\"},{\"@type\":[\"Person\",\"Organization\"],\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#\\/schema\\/person\\/137f85da0d2721284e839631299fc4a7\",\"name\":\"玄夜 樱\",\"image\":{\"@type\":\"ImageObject\",\"inLanguage\":\"zh-Hans\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/05\\/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg\",\"url\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/05\\/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg\",\"contentUrl\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/05\\/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg\",\"width\":512,\"height\":512,\"caption\":\"玄夜 樱\"},\"logo\":{\"@id\":\"https:\\/\\/www.sakuraxy.top\\/wp-content\\/uploads\\/2025\\/05\\/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg\"},\"description\":\"玄夜の资源站站长。分享好用软件、游戏和动漫资源，覆盖Windows\\/Mac\\/安卓多平台。专注优质ACG内容，让每一个资源都能被有需要的人找到。\",\"sameAs\":[\"https:\\/\\/www.sakuraxy.top\"]},{\"@type\":\"Person\",\"@id\":\"https:\\/\\/www.sakuraxy.top\\/#\\/schema\\/person\\/a93b4347468ced185a69b525ac83fbcd\",\"name\":\"树上的小狗\",\"image\":{\"@type\":\"ImageObject\",\"inLanguage\":\"zh-Hans\",\"@id\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/f6460690a29490a248ca08cc48d764f660c1baa2eb4680fcb9994e53004a5909?s=96&d=blank&r=g\",\"url\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/f6460690a29490a248ca08cc48d764f660c1baa2eb4680fcb9994e53004a5909?s=96&d=blank&r=g\",\"contentUrl\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/f6460690a29490a248ca08cc48d764f660c1baa2eb4680fcb9994e53004a5909?s=96&d=blank&r=g\",\"caption\":\"树上的小狗\"},\"description\":\"baka~\",\"url\":\"https:\\/\\/www.sakuraxy.top\\/author\\/2290\"}]}</script>\n<!-- / Yoast SEO Premium plugin. -->",
+  "yoast_head_json": {
+    "title": "【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play - SakuraXy",
+    "description": "WPS Office for Android，金山WPS移动版，免费安卓办公软件套装，体积小、速度快。独有手机阅读模式，字体清晰翻页流畅；完美支持文字/表格/演示/PDF等51种文档格式；新版海量精美模版及高级功能。",
+    "robots": {
+      "index": "index",
+      "follow": "follow",
+      "max-snippet": "max-snippet:-1",
+      "max-image-preview": "max-image-preview:large",
+      "max-video-preview": "max-video-preview:-1"
+    },
+    "canonical": "https://www.sakuraxy.top/10879",
+    "og_locale": "zh_CN",
+    "og_type": "article",
+    "og_title": "【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play",
+    "og_description": "WPS Office for Android，金山WPS移动版，免费安卓办公软件套装，体积小、速度快。独有手机阅读模式，字体清晰翻页流畅；完美支持文字/表格/演示/PDF等51种文档格式；新版海量精美模版及高级功能。",
+    "og_url": "https://www.sakuraxy.top/10879",
+    "og_site_name": "SakuraXy",
+    "article_published_time": "2026-10-14T15:55:17+00:00",
+    "article_modified_time": "2026-10-14T15:55:36+00:00",
+    "og_image": [
+      {
+        "width": 1553,
+        "height": 800,
+        "url": "https://www.sakuraxy.top/wp-content/uploads/2025/12/1733210759-c4ca4238a0b9238.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "author": "树上的小狗",
+    "twitter_card": "summary_large_image",
+    "twitter_misc": {
+      "作者": "树上的小狗",
+      "预计阅读时间": "1 分"
+    },
+    "schema": {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": "https://www.sakuraxy.top/10879#article",
+          "isPartOf": {
+            "@id": "https://www.sakuraxy.top/10879"
+          },
+          "author": {
+            "name": "树上的小狗",
+            "@id": "https://www.sakuraxy.top/#/schema/person/a93b4347468ced185a69b525ac83fbcd"
+          },
+          "headline": "【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play",
+          "datePublished": "2026-10-14T15:55:17+00:00",
+          "dateModified": "2026-10-14T15:55:36+00:00",
+          "mainEntityOfPage": {
+            "@id": "https://www.sakuraxy.top/10879"
+          },
+          "wordCount": 15,
+          "commentCount": 0,
+          "publisher": {
+            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+          },
+          "image": {
+            "@id": "https://www.sakuraxy.top/10879#primaryimage"
+          },
+          "thumbnailUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/12/1733210759-c4ca4238a0b9238.jpg",
+          "keywords": [
+            "Google play",
+            "WPS Office",
+            "中文",
+            "办公软件",
+            "安卓",
+            "安卓直装",
+            "安卓软件",
+            "官中",
+            "树上的小狗",
+            "正经",
+            "软件"
+          ],
+          "articleSection": [
+            "安卓工具"
+          ],
+          "inLanguage": "zh-Hans",
+          "potentialAction": [
+            {
+              "@type": "CommentAction",
+              "name": "Comment",
+              "target": [
+                "https://www.sakuraxy.top/10879#respond"
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://www.sakuraxy.top/10879",
+          "url": "https://www.sakuraxy.top/10879",
+          "name": "【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play - SakuraXy",
+          "isPartOf": {
+            "@id": "https://www.sakuraxy.top/#website"
+          },
+          "primaryImageOfPage": {
+            "@id": "https://www.sakuraxy.top/10879#primaryimage"
+          },
+          "image": {
+            "@id": "https://www.sakuraxy.top/10879#primaryimage"
+          },
+          "thumbnailUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/12/1733210759-c4ca4238a0b9238.jpg",
+          "datePublished": "2026-10-14T15:55:17+00:00",
+          "dateModified": "2026-10-14T15:55:36+00:00",
+          "description": "WPS Office for Android，金山WPS移动版，免费安卓办公软件套装，体积小、速度快。独有手机阅读模式，字体清晰翻页流畅；完美支持文字/表格/演示/PDF等51种文档格式；新版海量精美模版及高级功能。",
+          "breadcrumb": {
+            "@id": "https://www.sakuraxy.top/10879#breadcrumb"
+          },
+          "inLanguage": "zh-Hans",
+          "potentialAction": [
+            {
+              "@type": "ReadAction",
+              "target": [
+                "https://www.sakuraxy.top/10879"
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "ImageObject",
+          "inLanguage": "zh-Hans",
+          "@id": "https://www.sakuraxy.top/10879#primaryimage",
+          "url": "https://www.sakuraxy.top/wp-content/uploads/2025/12/1733210759-c4ca4238a0b9238.jpg",
+          "contentUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/12/1733210759-c4ca4238a0b9238.jpg",
+          "width": 1553,
+          "height": 800
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://www.sakuraxy.top/10879#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://www.sakuraxy.top/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "【安卓/办公】WPS Office Play国际版 v26.10.0 build 1640 中文 | 无广告 | 免登录 Google Play"
+            }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.sakuraxy.top/#website",
+          "url": "https://www.sakuraxy.top/",
+          "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
+          "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
+          "publisher": {
+            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+          },
+          "potentialAction": [
+            {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://www.sakuraxy.top/?s={search_term_string}"
+              },
+              "query-input": {
+                "@type": "PropertyValueSpecification",
+                "valueRequired": true,
+                "valueName": "search_term_string"
+              }
+            }
+          ],
+          "inLanguage": "zh-Hans"
+        },
+        {
+          "@type": [
+            "Person",
+            "Organization"
+          ],
+          "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+          "name": "玄夜 樱",
+          "image": {
+            "@type": "ImageObject",
+            "inLanguage": "zh-Hans",
+            "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+            "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+            "contentUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+            "width": 512,
+            "height": 512,
+            "caption": "玄夜 樱"
+          },
+          "logo": {
+            "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg"
+          },
+          "description": "玄夜の资源站站长。分享好用软件、游戏和动漫资源，覆盖Windows/Mac/安卓多平台。专注优质ACG内容，让每一个资源都能被有需要的人找到。",
+          "sameAs": [
+            "https://www.sakuraxy.top"
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://www.sakuraxy.top/#/schema/person/a93b4347468ced185a69b525ac83fbcd",
+          "name": "树上的小狗",
+          "image": {
+            "@type": "ImageObject",
+            "inLanguage": "zh-Hans",
+            "@id": "https://secure.gravatar.com/avatar/f6460690a29490a248ca08cc48d764f660c1baa2eb4680fcb9994e53004a5909?s=96&d=blank&r=g",
+            "url": "https://secure.gravatar.com/avatar/f6460690a29490a248ca08cc48d764f660c1baa2eb4680fcb9994e53004a5909?s=96&d=blank&r=g",
+            "contentUrl": "https://secure.gravatar.com/avatar/f6460690a29490a248ca08cc48d764f660c1baa2eb4680fcb9994e53004a5909?s=96&d=blank&r=g",
+            "caption": "树上的小狗"
+          },
+          "description": "baka~",
+          "url": "https://www.sakuraxy.top/author/2290"
+        }
+      ]
+    }
+  },
+  "_embedded": {
+    "wp:featuredmedia": [
+      {
+        "id": 12345,
+        "source_url": "https://www.example.com/wp-content/uploads/2025/12/cover-1024x759.jpg",
+        "alt_text": "封面示例"
+      }
+    ]
+  }
+}

@@ -1,0 +1,377 @@
+[
+  {
+    "id": 3595,
+    "count": 17,
+    "description": "",
+    "link": "https://www.example.com/ai-tools",
+    "name": "AI 人工智能",
+    "slug": "ai-tools",
+    "taxonomy": "category",
+    "parent": 0,
+    "meta": [],
+    "yoast_head_json": {
+      "title": "AI 人工智能 归档 - SakuraXy",
+      "robots": {
+        "index": "index",
+        "follow": "follow",
+        "max-snippet": "max-snippet:-1",
+        "max-image-preview": "max-image-preview:large",
+        "max-video-preview": "max-video-preview:-1"
+      },
+      "canonical": "https://www.sakuraxy.top/ai-tools",
+      "og_locale": "zh_CN",
+      "og_type": "article",
+      "og_title": "AI 人工智能 归档",
+      "og_url": "https://www.sakuraxy.top/ai-tools",
+      "og_site_name": "SakuraXy",
+      "og_image": [
+        {
+          "width": 799,
+          "height": 706,
+          "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/54545F9B6E4B145827115B9290C6E8D2.jpg",
+          "type": "image/jpeg"
+        }
+      ],
+      "twitter_card": "summary_large_image",
+      "schema": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "CollectionPage",
+            "@id": "https://www.sakuraxy.top/ai-tools",
+            "url": "https://www.sakuraxy.top/ai-tools",
+            "name": "AI 人工智能 归档 - SakuraXy",
+            "isPartOf": {
+              "@id": "https://www.sakuraxy.top/#website"
+            },
+            "breadcrumb": {
+              "@id": "https://www.sakuraxy.top/ai-tools#breadcrumb"
+            },
+            "inLanguage": "zh-Hans"
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://www.sakuraxy.top/ai-tools#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首页",
+                "item": "https://www.sakuraxy.top/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "AI 人工智能"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.sakuraxy.top/#website",
+            "url": "https://www.sakuraxy.top/",
+            "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
+            "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
+            "publisher": {
+              "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+            },
+            "potentialAction": [
+              {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://www.sakuraxy.top/?s={search_term_string}"
+                },
+                "query-input": {
+                  "@type": "PropertyValueSpecification",
+                  "valueRequired": true,
+                  "valueName": "search_term_string"
+                }
+              }
+            ],
+            "inLanguage": "zh-Hans"
+          },
+          {
+            "@type": [
+              "Person",
+              "Organization"
+            ],
+            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+            "name": "玄夜 樱",
+            "image": {
+              "@type": "ImageObject",
+              "inLanguage": "zh-Hans",
+              "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "contentUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "width": 512,
+              "height": 512,
+              "caption": "玄夜 樱"
+            },
+            "logo": {
+              "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg"
+            },
+            "description": "玄夜の资源站站长。分享好用软件、游戏和动漫资源，覆盖Windows/Mac/安卓多平台。专注优质ACG内容，让每一个资源都能被有需要的人找到。",
+            "sameAs": [
+              "https://www.sakuraxy.top"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": 3586,
+    "count": 226,
+    "description": "",
+    "link": "https://www.example.com/av-media/asmr-relax",
+    "name": "ASMR助眠",
+    "slug": "asmr-relax",
+    "taxonomy": "category",
+    "parent": 3581,
+    "meta": [],
+    "yoast_head_json": {
+      "title": "ASMR助眠 归档 - SakuraXy",
+      "robots": {
+        "index": "index",
+        "follow": "follow",
+        "max-snippet": "max-snippet:-1",
+        "max-image-preview": "max-image-preview:large",
+        "max-video-preview": "max-video-preview:-1"
+      },
+      "canonical": "https://www.sakuraxy.top/av-media/asmr-relax",
+      "og_locale": "zh_CN",
+      "og_type": "article",
+      "og_title": "ASMR助眠 归档",
+      "og_url": "https://www.sakuraxy.top/av-media/asmr-relax",
+      "og_site_name": "SakuraXy",
+      "og_image": [
+        {
+          "width": 799,
+          "height": 706,
+          "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/54545F9B6E4B145827115B9290C6E8D2.jpg",
+          "type": "image/jpeg"
+        }
+      ],
+      "twitter_card": "summary_large_image",
+      "schema": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "CollectionPage",
+            "@id": "https://www.sakuraxy.top/av-media/asmr-relax",
+            "url": "https://www.sakuraxy.top/av-media/asmr-relax",
+            "name": "ASMR助眠 归档 - SakuraXy",
+            "isPartOf": {
+              "@id": "https://www.sakuraxy.top/#website"
+            },
+            "breadcrumb": {
+              "@id": "https://www.sakuraxy.top/av-media/asmr-relax#breadcrumb"
+            },
+            "inLanguage": "zh-Hans"
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://www.sakuraxy.top/av-media/asmr-relax#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首页",
+                "item": "https://www.sakuraxy.top/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "音视频媒体",
+                "item": "https://www.sakuraxy.top/av-media"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "ASMR助眠"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.sakuraxy.top/#website",
+            "url": "https://www.sakuraxy.top/",
+            "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
+            "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
+            "publisher": {
+              "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+            },
+            "potentialAction": [
+              {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://www.sakuraxy.top/?s={search_term_string}"
+                },
+                "query-input": {
+                  "@type": "PropertyValueSpecification",
+                  "valueRequired": true,
+                  "valueName": "search_term_string"
+                }
+              }
+            ],
+            "inLanguage": "zh-Hans"
+          },
+          {
+            "@type": [
+              "Person",
+              "Organization"
+            ],
+            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+            "name": "玄夜 樱",
+            "image": {
+              "@type": "ImageObject",
+              "inLanguage": "zh-Hans",
+              "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "contentUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "width": 512,
+              "height": 512,
+              "caption": "玄夜 樱"
+            },
+            "logo": {
+              "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg"
+            },
+            "description": "玄夜の资源站站长。分享好用软件、游戏和动漫资源，覆盖Windows/Mac/安卓多平台。专注优质ACG内容，让每一个资源都能被有需要的人找到。",
+            "sameAs": [
+              "https://www.sakuraxy.top"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": 3580,
+    "count": 21,
+    "description": "",
+    "link": "https://www.example.com/image-design/cad-engineering",
+    "name": "CAD工程",
+    "slug": "cad-engineering",
+    "taxonomy": "category",
+    "parent": 3575,
+    "meta": [],
+    "yoast_head_json": {
+      "title": "CAD工程 归档 - SakuraXy",
+      "robots": {
+        "index": "index",
+        "follow": "follow",
+        "max-snippet": "max-snippet:-1",
+        "max-image-preview": "max-image-preview:large",
+        "max-video-preview": "max-video-preview:-1"
+      },
+      "canonical": "https://www.sakuraxy.top/image-design/cad-engineering",
+      "og_locale": "zh_CN",
+      "og_type": "article",
+      "og_title": "CAD工程 归档",
+      "og_url": "https://www.sakuraxy.top/image-design/cad-engineering",
+      "og_site_name": "SakuraXy",
+      "og_image": [
+        {
+          "width": 799,
+          "height": 706,
+          "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/54545F9B6E4B145827115B9290C6E8D2.jpg",
+          "type": "image/jpeg"
+        }
+      ],
+      "twitter_card": "summary_large_image",
+      "schema": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "CollectionPage",
+            "@id": "https://www.sakuraxy.top/image-design/cad-engineering",
+            "url": "https://www.sakuraxy.top/image-design/cad-engineering",
+            "name": "CAD工程 归档 - SakuraXy",
+            "isPartOf": {
+              "@id": "https://www.sakuraxy.top/#website"
+            },
+            "breadcrumb": {
+              "@id": "https://www.sakuraxy.top/image-design/cad-engineering#breadcrumb"
+            },
+            "inLanguage": "zh-Hans"
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://www.sakuraxy.top/image-design/cad-engineering#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首页",
+                "item": "https://www.sakuraxy.top/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "图像设计",
+                "item": "https://www.sakuraxy.top/image-design"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "CAD工程"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.sakuraxy.top/#website",
+            "url": "https://www.sakuraxy.top/",
+            "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
+            "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
+            "publisher": {
+              "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+            },
+            "potentialAction": [
+              {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://www.sakuraxy.top/?s={search_term_string}"
+                },
+                "query-input": {
+                  "@type": "PropertyValueSpecification",
+                  "valueRequired": true,
+                  "valueName": "search_term_string"
+                }
+              }
+            ],
+            "inLanguage": "zh-Hans"
+          },
+          {
+            "@type": [
+              "Person",
+              "Organization"
+            ],
+            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+            "name": "玄夜 樱",
+            "image": {
+              "@type": "ImageObject",
+              "inLanguage": "zh-Hans",
+              "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "url": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "contentUrl": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg",
+              "width": 512,
+              "height": 512,
+              "caption": "玄夜 樱"
+            },
+            "logo": {
+              "@id": "https://www.sakuraxy.top/wp-content/uploads/2025/05/cropped-54545F9B6E4B145827115B9290C6E8D2-1.jpg"
+            },
+            "description": "玄夜の资源站站长。分享好用软件、游戏和动漫资源，覆盖Windows/Mac/安卓多平台。专注优质ACG内容，让每一个资源都能被有需要的人找到。",
+            "sameAs": [
+              "https://www.sakuraxy.top"
+            ]
+          }
+        ]
+      }
+    }
+  }
+]
