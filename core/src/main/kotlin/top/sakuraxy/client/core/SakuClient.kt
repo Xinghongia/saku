@@ -11,6 +11,7 @@ package top.sakuraxy.client.core
  * - [author]：作者主页（卡片/评论/粉丝 + 关注）
  * - [messages]：消息中心与私信
  * - [newPost]：投稿（/newposts 草稿/发布）
+ * - [post]：文章页写操作（点赞/收藏/评论点赞/评分/积分购买/评论提交）
  */
 class SakuClient(val session: Session = Session()) {
     val http = createHttpClient(session)
@@ -21,4 +22,5 @@ class SakuClient(val session: Session = Session()) {
     val author = AuthorApi(http)
     val messages = MessageApi(http)
     val newPost = NewPostApi(http)
+    val post = PostApi(http)
 }

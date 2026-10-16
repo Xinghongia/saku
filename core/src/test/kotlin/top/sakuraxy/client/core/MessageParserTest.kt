@@ -49,15 +49,15 @@ class MessageParserTest {
         assertTrue(msg.unread)
         assertNotNull(msg.avatarUrl)
 
-        // 发送表单（nonce 现取现用）
+        // 发送表单（nonce 现取现用；样本里黑名单/上传/发送三个 nonce 各不相同）
         assertEquals("send_private", chat.sendFields["action"])
         assertEquals("10086", chat.sendFields["send_user"])
         assertEquals("99999999", chat.sendFields["receive_user"])
-        assertEquals("n0nce00000", chat.sendFields["send_private_nonce"])
+        assertEquals("n0nce00002", chat.sendFields["send_private_nonce"])
 
         // 图片上传字段（data-name/data-value 形式）
         assertEquals("user_upload_image", chat.imageUploadFields["action"])
-        assertEquals("n0nce00000", chat.imageUploadFields["upload_image_nonce"])
+        assertEquals("n0nce00001", chat.imageUploadFields["upload_image_nonce"])
     }
 
     @Test

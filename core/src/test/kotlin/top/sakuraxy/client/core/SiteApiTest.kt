@@ -9,7 +9,6 @@ import org.junit.Test
 class SiteApiTest {
 
     private val listHtml by lazy { fixture("list_page_sample.html") }
-    private val postHtml by lazy { fixture("post_page_sample.html") }
 
     // ---------- 列表页（样本 = 2026-10-15 站点真实页面脱敏副本） ----------
 
@@ -136,32 +135,6 @@ class SiteApiTest {
         assertEquals(
             "https://www.example.com/?orderby=rand",
             SiteParser.listUrl("https://www.example.com", null, "rand", 1).toString(),
-        )
-    }
-
-    // ---------- 文章页 ----------
-
-    @Test
-    fun `文章页解析出作者统计与标签`() {
-        val stats = SiteParser.parsePostStats(postHtml)
-
-        assertEquals("示例读者A", stats.authorName)
-        assertTrue(stats.authorAvatar!!.endsWith(".jpg") || stats.authorAvatar.contains("avatar"))
-        assertEquals(0, stats.commentCount)
-        assertEquals(175, stats.viewCount)
-        assertEquals(0, stats.likeCount)
-        assertTrue(stats.tags.contains("安卓"))
-        assertTrue("发布日期标题：${stats.dateTitle}", stats.dateTitle!!.contains("2026年"))
-    }
-
-    @Test
-    fun `文章页面包屑还原分类路径`() {
-        val stats = SiteParser.parsePostStats(postHtml)
-
-        assertEquals(listOf("手机应用", "安卓工具"), stats.breadcrumbCategories.map { it.name })
-        assertEquals(
-            listOf("/mobile-apps", "/mobile-apps/android-tools"),
-            stats.breadcrumbCategories.map { it.url.removePrefix("https://www.example.com") },
         )
     }
 

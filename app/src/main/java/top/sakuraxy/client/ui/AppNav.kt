@@ -281,6 +281,8 @@ fun AppNav(app: SakuApp) {
                     postId = postId,
                     onBack = { navController.popBackStack() },
                     onOpenPost = { navController.navigate(Routes.detail(it)) },
+                    onOpenAuthor = { navController.navigate(Routes.author(it)) },
+                    onOpenChat = { navController.navigate(Routes.chat(it)) },
                     onOpenCategory = { name, url ->
                         navController.navigate(Routes.category(url, name))
                     },

@@ -63,18 +63,6 @@ object SiteParser {
 
     data class CategoryHeader(val name: String, val postCountText: String?)
 
-    data class PostStats(
-        val authorName: String?,
-        val authorAvatar: String?,
-        val dateTitle: String?,
-        val commentCount: Int?,
-        val viewCount: Int?,
-        val likeCount: Int?,
-        /** 面包屑里的分类路径（不含「首页」「正文」） */
-        val breadcrumbCategories: List<CardTerm>,
-        val tags: List<String>,
-    )
-
     // ---------- 列表页 ----------
 
     /** 站点支持的排序项（2026-10-15 实测自页面排序菜单） */
@@ -121,46 +109,6 @@ object SiteParser {
         val count = b.selectFirst(".icon-spot")?.text()?.trim()
         val name = b.clone().apply { select(".icon-spot").remove() }.text().trim()
         return CategoryHeader(name = name, postCountText = count)
-    }
-
-    // ---------- 文章页 ----------
-
-    fun parsePostStats(html: String): PostStats {
-        val doc = Jsoup.parse(html)
-        val article = doc.selectFirst("article.article") ?: doc
-        val header = article.selectFirst(".article-header")
-
-        val metas = article.selectFirst(".post-metas")
-        val commentCount = metas?.selectFirst(".meta-comm")?.text()?.trim()?.toIntOrNull()
-        val viewCount = metas?.selectFirst(".meta-view")?.text()?.trim()?.toIntOrNull()
-        val likeCount = metas?.selectFirst(".meta-like")?.text()?.trim()?.toIntOrNull()
-
-        val authorName = header?.selectFirst(".display-name")?.text()?.trim()?.takeIf { it.isNotBlank() }
-        val authorAvatar = header?.selectFirst(".avatar-img img")?.let { imageUrl(it) }
-        val dateTitle = header?.selectFirst("span[title*=发布]")?.attr("title")?.takeIf { it.isNotBlank() }
-
-        val breadcrumb = doc.selectFirst("ul.breadcrumb")?.select("li a")
-            ?.mapNotNull { a ->
-                val text = a.text().trim()
-                val href = a.absUrl("href")
-                if (text.isBlank() || text == "首页" || text == "正文" || href.isBlank()) null
-                else CardTerm(text, href)
-            } ?: emptyList()
-
-        val tags = article.select("a[href*=/tag/]").mapNotNull { a ->
-            a.text().trim().removePrefix("#").trim().takeIf { it.isNotBlank() }
-        }.distinct()
-
-        return PostStats(
-            authorName = authorName,
-            authorAvatar = authorAvatar,
-            dateTitle = dateTitle,
-            commentCount = commentCount,
-            viewCount = viewCount,
-            likeCount = likeCount,
-            breadcrumbCategories = breadcrumb,
-            tags = tags,
-        )
     }
 
     // ---------- 单张卡片 ----------
@@ -227,8 +175,8 @@ object SiteParser {
         )
     }
 
-    /** 取图：优先懒加载 data-src；占位图（thumbnail*.svg / avatar-default）不算真图 */
-    private fun imageUrl(img: Element): String? {
+    /** 取图：优先懒加载 data-src；占位图（thumbnail*.svg / avatar-default）不算真图（文章页解析共用） */
+    internal fun imageUrl(img: Element): String? {
         val candidates = listOf(img.attr("data-src"), img.attr("src"))
         for (raw in candidates) {
             if (raw.isBlank()) continue
@@ -336,8 +284,17 @@ class SiteApi(
         return SiteParser.parseCategoryHeader(client.getText(url))
     }
 
-    suspend fun postStats(link: String): SiteParser.PostStats {
+    /** 文章详情页完整解析（头部/互动/评分/付费区/作者卡/首屏评论） */
+    suspend fun postDetail(link: String): PostDetail {
         val url = link.toHttpUrlOrNull() ?: "$baseUrl/".toHttpUrl()
-        return SiteParser.parsePostStats(client.getText(url))
+        return PostDetailParser.parsePostDetail(client.getText(url))
+    }
+
+    /** 评论分页（?cpage=N；N=1 即首屏）。返回解析后的评论页或 null */
+    suspend fun commentsPage(link: String, page: Int): PostCommentPage? {
+        require(page >= 1) { "page 从 1 开始" }
+        val builder = (link.toHttpUrlOrNull() ?: "$baseUrl/".toHttpUrl()).newBuilder()
+        if (page > 1) builder.addQueryParameter("cpage", page.toString())
+        return PostDetailParser.parseCommentList(client.getText(builder.build()))
     }
 }

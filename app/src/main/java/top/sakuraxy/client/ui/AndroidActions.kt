@@ -24,4 +24,17 @@ object AndroidActions {
         manager?.setPrimaryClip(ClipData.newPlainText("链接", text))
         Toast.makeText(context, "已复制链接", Toast.LENGTH_SHORT).show()
     }
+
+    /** 系统分享面板（发送文本 + 链接给任意已装应用） */
+    fun shareText(context: Context, text: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        try {
+            context.startActivity(Intent.createChooser(intent, "分享到"))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(context, "没有可用的分享目标", Toast.LENGTH_SHORT).show()
+        }
+    }
 }
