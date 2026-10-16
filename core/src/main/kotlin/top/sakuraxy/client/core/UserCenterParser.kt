@@ -312,7 +312,8 @@ object UserCenterParser {
         )
     }
 
-    private fun parseForm(form: org.jsoup.nodes.Element): PanelForm {
+    /** 表单元素 → [PanelForm]（账户安全/注册/找回密码等共用；同包内可见） */
+    internal fun parseForm(form: org.jsoup.nodes.Element): PanelForm {
         val fields = linkedMapOf<String, String>()
         val checkboxes = linkedMapOf<String, Boolean>()
         form.select("input[name]").forEach { input ->

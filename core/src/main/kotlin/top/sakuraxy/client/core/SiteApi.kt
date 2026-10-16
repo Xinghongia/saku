@@ -37,8 +37,8 @@ object SiteParser {
         val payPoints: String?,
         /** 卡片上列出的分类（含多级） */
         val categories: List<CardTerm>,
-        /** 卡片上列出的标签（不含 # 前缀） */
-        val tags: List<String>,
+        /** 卡片上列出的标签（名称不含 # 前缀 + 标签归档链接） */
+        val tags: List<CardTerm>,
         val authorName: String?,
         val authorAvatar: String?,
         /** 作者身份徽章，如「钻石会员」 */
@@ -142,7 +142,9 @@ object SiteParser {
         } ?: emptyList()
 
         val tags = tagArea?.select("a[href*=/tag/]")?.mapNotNull { a ->
-            a.text().trim().removePrefix("#").trim().takeIf { it.isNotBlank() }
+            val href = a.absUrl("href")
+            val name = a.text().trim().removePrefix("#").trim()
+            if (name.isBlank() || href.isBlank()) null else CardTerm(name, href)
         } ?: emptyList()
 
         val meta = card.selectFirst(".meta-author")

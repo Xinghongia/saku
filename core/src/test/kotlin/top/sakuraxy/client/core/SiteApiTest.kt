@@ -41,7 +41,9 @@ class SiteApiTest {
             listOf("/ai-tools", "/av-media", "/av-media/audio-editing"),
             card.categories.map { it.url.removePrefix("https://www.example.com") },
         )
-        assertEquals(listOf("樱 玄夜", "音频编辑", "音频分离"), card.tags)
+        assertEquals(listOf("樱 玄夜", "音频编辑", "音频分离"), card.tags.map { it.name })
+        // 标签带归档链接（客户端据此打开标签页，与网页点标签等价）
+        assertTrue(card.tags.all { it.url.contains("/tag/") })
         assertEquals(0, card.commentCount)
         assertEquals(85, card.viewCount)
         assertEquals(0, card.likeCount)
@@ -61,7 +63,7 @@ class SiteApiTest {
         assertEquals("2026-10-14 23:53:43", card.dateTitle)
         assertEquals(1817, card.viewCount)
         assertEquals(8, card.likeCount)
-        assertTrue(card.tags.contains("官中"))
+        assertTrue(card.tags.any { it.name == "官中" })
         assertNull(card.payLabel)
         assertEquals(0, card.categories.size)
     }

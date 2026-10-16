@@ -6,6 +6,7 @@ import mockwebserver3.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -57,6 +58,108 @@ class AuthApiTest {
         assertFalse(page.hasSigninForm)
         assertEquals(0, page.formFields.size)
     }
+
+    // ---------- 注册 / 找回密码解析（样本：登录页三个 tab 表单的脱敏副本） ----------
+
+    @Test
+    fun `登录页解析出注册与找回密码表单及发码按钮`() {
+        val forms = auth.parseAuthForms(fixture("auth_page_sample.html"))
+
+        assertEquals("user_signup", forms.signup?.action)
+        assertEquals("signup_captcha", forms.signupSendAction)
+        assertEquals("slider", forms.signup?.fields?.get("captcha_mode"))
+        assertEquals("email", forms.signup?.fields?.get("captcha_type"))
+        assertTrue(forms.signup!!.fields.containsKey("_wpnonce"))
+
+        assertEquals("reset_password", forms.reset?.action)
+        assertEquals("resetpassword_captcha", forms.resetSendAction)
+        assertEquals("1", forms.reset?.fields?.get("repeat"))
+        assertTrue(forms.reset!!.fields.containsKey("_wpnonce"))
+        // 两个表单的 nonce 互不相同（按原值映射的脱敏副本）
+        assertTrue(forms.signup!!.fields["_wpnonce"] != forms.reset!!.fields["_wpnonce"])
+    }
+
+    @Test
+    fun `没有注册与找回密码表单的页面如实返回空`() {
+        val html = "<html><body><form><input name='action' value='user_signin'></form></body></html>"
+        val forms = auth.parseAuthForms(html)
+
+        assertNull(forms.signup)
+        assertNull(forms.signupSendAction)
+        assertNull(forms.reset)
+        assertNull(forms.resetSendAction)
+    }
+
+    @Test
+    fun `signUp 按注册表单字段提交（含协议与滑块）`() = runBlocking {
+        val forms = auth.parseAuthForms(fixture("auth_page_sample.html"))
+        server.enqueue(MockResponse.Builder().code(200).body("""{"error":0,"msg":"注册成功"}""").build())
+        val solution = sampleSolution()
+
+        val result = auth.signUp(forms.signup!!, "示例新用户", "demo@example.com", "123456", "secret66", solution)
+
+        assertEquals("注册成功", (result as AjaxResult.Ok).msg)
+        val postRequest = server.takeRequest()
+        assertEquals("/wp-admin/admin-ajax.php", postRequest.url.encodedPath)
+        val fields = decodedFields(postRequest)
+        assertEquals("user_signup", fields["action"])
+        assertEquals("示例新用户", fields["name"])
+        assertEquals("demo@example.com", fields["email"])
+        assertEquals("123456", fields["captch"])
+        assertEquals("secret66", fields["password2"])
+        assertEquals("on", fields["user_agreement"])
+        assertEquals("slider", fields["captcha_mode"])
+        assertEquals("34oibiwrp92griym26", fields["captcha[ticket]"])
+        assertTrue(fields["_wpnonce"]!!.isNotBlank())
+    }
+
+    @Test
+    fun `sendSignupCaptcha 与 resetPassword 走各自的 action 与字段`() = runBlocking {
+        val forms = auth.parseAuthForms(fixture("auth_page_sample.html"))
+
+        // 发送注册验证码
+        server.enqueue(MockResponse.Builder().code(200).body("""{"error":0,"msg":"验证码已发送","remaining_time":60}""").build())
+        auth.sendSignupCaptcha(forms.signup!!, "示例新用户", "demo@example.com", sampleSolution())
+        val send = decodedFields(server.takeRequest())
+        assertEquals("signup_captcha", send["action"])
+        assertEquals("demo@example.com", send["email"])
+        assertEquals("示例新用户", send["name"])
+
+        // 找回密码提交：repeat=1 来自表单隐藏字段原样转发
+        server.enqueue(MockResponse.Builder().code(200).body("""{"error":0,"msg":"密码重置成功"}""").build())
+        val result = auth.resetPassword(forms.reset!!, "demo@example.com", "654321", "newpass6", "newpass6", null)
+        assertEquals("密码重置成功", (result as AjaxResult.Ok).msg)
+        val reset = decodedFields(server.takeRequest())
+        assertEquals("reset_password", reset["action"])
+        assertEquals("demo@example.com", reset["email"])
+        assertEquals("654321", reset["captch"])
+        assertEquals("newpass6", reset["password2"])
+        assertEquals("newpass6", reset["repassword"])
+        assertEquals("1", reset["repeat"])
+    }
+
+    @Test
+    fun `注册失败时如实返回站点原因`() = runBlocking {
+        val forms = auth.parseAuthForms(fixture("auth_page_sample.html"))
+        server.enqueue(MockResponse.Builder().code(200).body("""{"error":1,"msg":"该邮箱已被注册"}""").build())
+
+        val result = auth.signUp(forms.signup!!, "示例新用户", "demo@example.com", "123456", "secret66", null)
+
+        assertEquals(AjaxResult.Fail("该邮箱已被注册"), result)
+    }
+
+    private fun sampleSolution() = SliderCaptcha.Solution(
+        ticket = "34oibiwrp92griym26",
+        randstr = "276b5b8a09bab55a317668d325",
+        spliced = true,
+        trail = listOf(0, 0, -1, 0, 1),
+        check = "35854c6d05a74f594037aa816a3c0a0d",
+    )
+
+    private fun decodedFields(request: mockwebserver3.RecordedRequest): Map<String, String> =
+        java.net.URLDecoder.decode(request.body!!.utf8(), "UTF-8")
+            .split("&")
+            .associate { it.substringBefore("=") to it.substringAfter("=") }
 
     // ---------- 登录请求与响应解析（本地 mock 服务器，不外联） ----------
 

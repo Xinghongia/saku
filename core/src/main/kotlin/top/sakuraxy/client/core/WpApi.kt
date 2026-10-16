@@ -52,6 +52,21 @@ class WpApi(
         return SakuJson.decodeFromString(client.getText(url))
     }
 
+    /**
+     * 独立页面（WordPress page，如站点「使用手册」/manual）。
+     * 不存在返回 null；`_fields` 只取渲染所需三字段，减少流量。
+     */
+    suspend fun pageBySlug(slug: String): WpPost? {
+        require(slug.isNotBlank()) { "slug 不能为空" }
+        val url = restBase.newBuilder()
+            .addPathSegment("pages")
+            .addQueryParameter("slug", slug)
+            .addQueryParameter("_fields", "id,title,content")
+            .build()
+        val pages: List<WpPost> = SakuJson.decodeFromString(client.getText(url))
+        return pages.firstOrNull()
+    }
+
     suspend fun categories(perPage: Int = 100): List<WpTerm> = terms("categories", perPage)
 
     suspend fun tags(perPage: Int = 100): List<WpTerm> = terms("tags", perPage)

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html><body>
+<form>
+ <div class="relative line-form mb10">
+  <input type="text" name="username" class="line-form-input" tabindex="1" placeholder=""><i class="line-form-line"></i>
+  <div class="scale-placeholder">
+   用户名或邮箱
+  </div>
+ </div>
+ <div class="relative line-form mb10">
+  <input type="password" name="password" class="line-form-input" tabindex="2" placeholder="">
+  <div class="scale-placeholder">
+   登录密码
+  </div>
+  <div class="abs-right passw muted-2-color">
+   <i class="fa-fw fa fa-eye"></i>
+  </div><i class="line-form-line"></i>
+ </div><input machine-verification="slider" type="hidden" name="captcha_mode" value="slider" slider-id="">
+ <div class="relative line-form mb10 em09">
+  <span class="muted-color form-checkbox"><input type="checkbox" id="remember" checked tabindex="4" name="remember" value="forever"><label for="remember" class="ml3">记住登录</label></span><span class="pull-right muted-2-color"><a class="muted-2-color" href="#tab-resetpassword" data-toggle="tab">找回密码</a></span>
+ </div>
+ <div class="box-body">
+  <input type="hidden" name="action" value="user_signin"><button type="button" class="but radius jb-blue padding-lg signsubmit-loader btn-block"><i class="fa fa-sign-in mr10"></i>登录</button>
+ </div>
+</form>
+<form id="sign-up">
+ <div class="relative line-form mb10">
+  <input type="text" name="name" class="line-form-input" tabindex="1" placeholder=""><i class="line-form-line"></i>
+  <div class="scale-placeholder">
+   设置用户名
+  </div>
+ </div>
+ <div class="relative line-form mb10">
+  <input change-show=".change-show" type="text" name="email" class="line-form-input" tabindex="1" placeholder=""><i class="line-form-line"></i>
+  <div class="scale-placeholder">
+   邮箱
+  </div>
+ </div><input machine-verification="slider" type="hidden" name="captcha_mode" value="slider" slider-id="">
+ <div class="relative line-form mb10 change-show">
+  <input type="text" name="captch" class="line-form-input" autocomplete="off" tabindex="2" placeholder=""><i class="line-form-line"></i>
+  <div class="scale-placeholder">
+   验证码
+  </div><span class="yztx abs-right"><button type="button" form-action="signup_captcha" class="but c-blue captchsubmit">发送验证码</button></span>
+  <div class="abs-right match-ok muted-color">
+   <i class="fa-fw fa fa-check-circle"></i>
+  </div><input type="hidden" name="captcha_type" value="email"><input type="hidden" id="_wpnonce" name="_wpnonce" value="n0nce00000">
+ </div>
+ <div class="relative line-form mb10">
+  <input type="password" name="password2" class="line-form-input" tabindex="3" placeholder="">
+  <div class="scale-placeholder">
+   设置密码
+  </div>
+  <div class="abs-right passw muted-2-color">
+   <i class="fa-fw fa fa-eye"></i>
+  </div><i class="line-form-line"></i>
+ </div>
+ <div class="box-body">
+  <input type="hidden" name="action" value="user_signup"><button type="button" class="but radius jb-green padding-lg signsubmit-loader btn-block">
+   <svg class="icon mr10" aria-hidden="true" data-viewBox="0 0 1024 1024" viewBox="0 0 1024 1024">
+    <use xlink:href="#icon-signup"></use>
+   </svg>注册</button>
+  <div class="form-checkbox muted-color mt10 text-center px12 opacity8">
+   <input name="user_agreement" id="user_agreement" type="checkbox"><label for="user_agreement" class="px12 ml6" style="font-weight:normal;">已阅读并同意<a class="focus-color" target="_blank" href="https://www.example.com/user-agreement">用户协议</a>、<a class="focus-color" target="_blank" href="https://www.example.com/privacy-policy">隐私声明</a></label>
+  </div>
+ </div>
+</form>
+<form id="sign-up">
+ <div class="relative line-form mb10">
+  <input change-show=".change-show" type="text" name="email" class="line-form-input" tabindex="1" placeholder=""><i class="line-form-line"></i>
+  <div class="scale-placeholder">
+   邮箱
+  </div>
+ </div><input machine-verification="slider" type="hidden" name="captcha_mode" value="slider" slider-id="">
+ <div class="relative line-form mb10 change-show">
+  <input type="text" name="captch" class="line-form-input" autocomplete="off" tabindex="2" placeholder=""><i class="line-form-line"></i>
+  <div class="scale-placeholder">
+   验证码
+  </div><span class="yztx abs-right"><button type="button" form-action="resetpassword_captcha" class="but c-blue captchsubmit">发送验证码</button></span>
+  <div class="abs-right match-ok muted-color">
+   <i class="fa-fw fa fa-check-circle"></i>
+  </div><input type="hidden" name="captcha_type" value="email"><input type="hidden" id="_wpnonce" name="_wpnonce" value="n0nce00001">
+ </div>
+ <div class="relative line-form mb10">
+  <input type="password" name="password2" class="line-form-input" tabindex="3" placeholder="">
+  <div class="scale-placeholder">
+   设置新密码
+  </div>
+  <div class="abs-right passw muted-2-color">
+   <i class="fa-fw fa fa-eye"></i>
+  </div><i class="line-form-line"></i>
+ </div>
+ <div class="relative line-form mb10">
+  <input type="password" name="repassword" class="line-form-input" tabindex="4" placeholder="">
+  <div class="scale-placeholder">
+   重复密码
+  </div>
+  <div class="abs-right passw muted-2-color">
+   <i class="fa-fw fa fa-eye"></i>
+  </div><i class="line-form-line"></i>
+ </div>
+ <div class="box-body">
+  <input type="hidden" name="action" value="reset_password"><input type="hidden" name="repeat" value="1"><button type="button" class="but radius jb-green padding-lg signsubmit-loader btn-block">确认提交</button>
+ </div>
+</form>
+</body></html>

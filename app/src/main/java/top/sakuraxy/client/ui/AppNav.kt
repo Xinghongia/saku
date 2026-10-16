@@ -32,12 +32,15 @@ import androidx.navigation.navArgument
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.ui.auth.LoginScreen
+import top.sakuraxy.client.ui.auth.ResetPasswordScreen
+import top.sakuraxy.client.ui.auth.SignupScreen
 import top.sakuraxy.client.ui.category.CategoriesScreen
 import top.sakuraxy.client.ui.category.CategoryScreen
 import top.sakuraxy.client.ui.detail.DetailScreen
 import top.sakuraxy.client.ui.home.HomeScreen
 import top.sakuraxy.client.ui.profile.ProfileScreen
 import top.sakuraxy.client.ui.search.SearchScreen
+import top.sakuraxy.client.ui.settings.ManualScreen
 import top.sakuraxy.client.ui.settings.SettingsScreen
 import top.sakuraxy.client.ui.user.AccountSecurityScreen
 import top.sakuraxy.client.ui.user.AuthorScreen
@@ -55,7 +58,10 @@ private object Routes {
     const val CATEGORY = "category?url={url}&name={name}"
     const val DETAIL = "detail/{postId}"
     const val LOGIN = "login"
+    const val SIGNUP = "signup"
+    const val RESET_PASSWORD = "reset-password"
     const val SETTINGS = "settings"
+    const val MANUAL = "manual"
 
     // ---- v0.5 用户中心 ----
     const val USER_EDIT = "user/edit"
@@ -291,11 +297,58 @@ fun AppNav(app: SakuApp) {
             }
 
             composable(Routes.LOGIN) {
-                LoginScreen(app = app, onBack = { navController.popBackStack() })
+                LoginScreen(
+                    app = app,
+                    onBack = { navController.popBackStack() },
+                    onOpenSignup = { navController.navigate(Routes.SIGNUP) },
+                    onOpenReset = { navController.navigate(Routes.RESET_PASSWORD) },
+                )
+            }
+
+            composable(Routes.SIGNUP) {
+                SignupScreen(
+                    app = app,
+                    onBack = { navController.popBackStack() },
+                    onRegistered = { autoLoggedIn ->
+                        if (autoLoggedIn) {
+                            // 站点注册后自动登录（与网页注册后刷新即是登录态一致）：
+                            // 连同登录页一起退出，回到来处（此时已是登录状态）
+                            navController.popBackStack(Routes.LOGIN, inclusive = true)
+                        } else {
+                            navController.popBackStack() // 回到登录页，用新账号登录
+                        }
+                    },
+                )
+            }
+
+            composable(Routes.RESET_PASSWORD) {
+                ResetPasswordScreen(
+                    app = app,
+                    onBack = { navController.popBackStack() },
+                    onResetSuccess = { autoLoggedIn ->
+                        if (autoLoggedIn) {
+                            navController.popBackStack(Routes.LOGIN, inclusive = true)
+                        } else {
+                            navController.popBackStack() // 回到登录页，用新密码登录
+                        }
+                    },
+                )
             }
 
             composable(Routes.SETTINGS) {
-                SettingsScreen(app = app, onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    app = app,
+                    onBack = { navController.popBackStack() },
+                    onOpenManual = { navController.navigate(Routes.MANUAL) },
+                )
+            }
+
+            composable(Routes.MANUAL) {
+                ManualScreen(
+                    app = app,
+                    onBack = { navController.popBackStack() },
+                    onOpenPost = { postId -> navController.navigate(Routes.detail(postId)) },
+                )
             }
         }
     }

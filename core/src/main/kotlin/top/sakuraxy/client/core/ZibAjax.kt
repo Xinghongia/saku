@@ -76,3 +76,34 @@ internal fun FormBody.Builder.addCaptcha(solution: SliderCaptcha.Solution): Form
     add("captcha[trail]", solution.trail.joinToString(",", "[", "]"))
     add("captcha[check]", solution.check)
 }
+
+/**
+ * 合并表单提交数据（网页 zib_ajax 序列化行为的等价物）：
+ * 隐藏字段原样转发 + 下拉取选中值 + [values] 覆盖用户编辑的字段 + action。
+ * 账户安全、注册、找回密码等所有 zib_ajax 表单提交共用。
+ */
+internal fun mergeFormValues(
+    form: PanelForm,
+    values: Map<String, String>,
+    action: String,
+): LinkedHashMap<String, String> {
+    val merged = linkedMapOf<String, String>()
+    form.fields.forEach { (k, v) -> if (k != "action") merged[k] = v }
+    form.selects.forEach { select -> select.selectedValue?.let { merged[select.name] = it } }
+    merged.putAll(values)
+    merged["action"] = action
+    return merged
+}
+
+/** [mergeFormValues] + 滑块数据 → 可直接 POST 的表单体 */
+internal fun buildAjaxFormBody(
+    form: PanelForm,
+    values: Map<String, String>,
+    action: String,
+    captcha: SliderCaptcha.Solution?,
+): FormBody {
+    val body = FormBody.Builder()
+    mergeFormValues(form, values, action).forEach { (k, v) -> body.add(k, v) }
+    captcha?.let { body.addCaptcha(it) }
+    return body.build()
+}

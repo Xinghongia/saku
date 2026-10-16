@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Sort
@@ -82,7 +83,7 @@ private val sortOptions = listOf(null to "推荐") + SiteParser.knownSortOptions
 /** 设置页：外观（主题模式/动态取色/预设主题/纯黑）、浏览（默认排序）、数据（清缓存）、关于 */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(app: SakuApp, onBack: () -> Unit) {
+fun SettingsScreen(app: SakuApp, onBack: () -> Unit, onOpenManual: () -> Unit) {
     val settings by app.settingsStore.flow.collectAsState(initial = Settings())
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -244,6 +245,13 @@ fun SettingsScreen(app: SakuApp, onBack: () -> Unit) {
                     icon = Icons.Outlined.Info,
                     tone = GroupTone.PRIMARY,
                     trailing = { Text(BuildConfig.VERSION_NAME, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                )
+                item(
+                    headline = "网站使用手册",
+                    supporting = "站点的完整使用教程（注册、下载、积分说明）",
+                    icon = Icons.Outlined.MenuBook,
+                    tone = GroupTone.PRIMARY,
+                    onClick = onOpenManual,
                 )
                 item(
                     headline = "开源地址",

@@ -5,6 +5,7 @@ import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -97,6 +98,28 @@ class WpApiTest {
         assertEquals(12345L, post.featuredMedia)
 
         assertEquals("/wp-json/wp/v2/posts/10000", server.takeRequest().url.encodedPath)
+    }
+
+    @Test
+    fun `pageBySlug 按 slug 拉取独立页面，不存在返回 null`() = runBlocking {
+        server.enqueue(
+            json(
+                """[{"id":29834,"title":{"rendered":"网站使用手册"},"content":{"rendered":"<p>正文</p>"}}]""",
+            ),
+        )
+
+        val page = api.pageBySlug("manual")
+
+        assertEquals(29834L, page?.id)
+        assertEquals("网站使用手册", page?.title?.rendered)
+
+        val request = server.takeRequest()
+        assertEquals("/wp-json/wp/v2/pages", request.url.encodedPath)
+        assertEquals("manual", request.url.queryParameter("slug"))
+        assertEquals("id,title,content", request.url.queryParameter("_fields"))
+
+        server.enqueue(json("[]"))
+        assertNull(api.pageBySlug("no-such-page"))
     }
 
     @Test

@@ -127,7 +127,7 @@ fun HomeScreen(
                         PostCardItem(
                             card = card,
                             onClick = { onOpenPost(card) },
-                            onCategoryClick = onOpenCategory,
+                            onTermClick = onOpenCategory,
                         )
                     }
                     item {

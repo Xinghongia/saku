@@ -63,6 +63,119 @@ class AuthApi(
         return parseSigninPage(client.getText(url))
     }
 
+    // ---------- 注册 / 找回密码（与登录同一页面 /user-sign 的三个 tab 表单） ----------
+
+    /**
+     * 登录页上的注册与找回密码表单（2026-10-16 实测自 signin.html）。
+     * 每个表单自带 `_wpnonce` 与 `captcha_mode=slider`（每次提交含发验证码都要带真实滑块数据）；
+     * 发送验证码按钮的 action 写在按钮的 `form-action` 属性上。
+     */
+    data class AuthForms(
+        /** 注册表单（action=user_signup；字段 name/email/captch/password2/user_agreement） */
+        val signup: PanelForm?,
+        /** 注册「发送验证码」按钮的 form-action（signup_captcha） */
+        val signupSendAction: String?,
+        /** 找回密码表单（action=reset_password；字段 email/captch/password2/repassword/repeat） */
+        val reset: PanelForm?,
+        /** 找回密码「发送验证码」按钮的 form-action（resetpassword_captcha） */
+        val resetSendAction: String?,
+    )
+
+    /** 纯解析：从登录页 HTML 找注册与找回密码表单（离线可测） */
+    fun parseAuthForms(html: String): AuthForms {
+        val doc = Jsoup.parse(html, baseUrl)
+        fun formByAction(action: String): Pair<PanelForm?, String?> {
+            val form = doc.select("form").firstOrNull {
+                it.selectFirst("input[name=action][value=$action]") != null
+            } ?: return null to null
+            val sendAction = form.selectFirst("button[form-action]")
+                ?.attr("form-action")?.takeIf { it.isNotBlank() }
+            return UserCenterParser.parseForm(form) to sendAction
+        }
+        val (signup, signupSend) = formByAction("user_signup")
+        val (reset, resetSend) = formByAction("reset_password")
+        return AuthForms(signup, signupSend, reset, resetSend)
+    }
+
+    /** 拉取 /user-sign 页面并解析注册 / 找回密码表单（nonce 现取现用） */
+    suspend fun fetchAuthForms(): AuthForms = parseAuthForms(client.getText("$baseUrl/user-sign".toHttpUrl()))
+
+    /** 注册：发送邮箱验证码（网页 .captchsubmit 的等价物；先由用户完成滑块） */
+    suspend fun sendSignupCaptcha(
+        form: PanelForm,
+        name: String,
+        email: String,
+        captcha: SliderCaptcha.Solution?,
+    ): AjaxResult = postAuthForm(
+        form,
+        mapOf("name" to name, "email" to email),
+        "signup_captcha",
+        captcha,
+    )
+
+    /**
+     * 注册提交（action=user_signup）。注册成功不会自动登录（与网页一致：刷新后仍需登录）；
+     * 用户的真实资料由用户在界面上亲自填写，客户端不代填、不批量注册。
+     */
+    suspend fun signUp(
+        form: PanelForm,
+        name: String,
+        email: String,
+        code: String,
+        password: String,
+        captcha: SliderCaptcha.Solution?,
+    ): AjaxResult = postAuthForm(
+        form,
+        mapOf(
+            "name" to name,
+            "email" to email,
+            "captch" to code,
+            "password2" to password,
+            // 网页勾选协议后复选框随表单提交（value 默认 on）
+            "user_agreement" to "on",
+        ),
+        "user_signup",
+        captcha,
+    )
+
+    /** 找回密码：发送邮箱验证码 */
+    suspend fun sendResetCaptcha(
+        form: PanelForm,
+        email: String,
+        captcha: SliderCaptcha.Solution?,
+    ): AjaxResult = postAuthForm(form, mapOf("email" to email), "resetpassword_captcha", captcha)
+
+    /** 找回密码提交（action=reset_password；repeat=1 已在表单隐藏字段里原样转发） */
+    suspend fun resetPassword(
+        form: PanelForm,
+        email: String,
+        code: String,
+        password: String,
+        confirm: String,
+        captcha: SliderCaptcha.Solution?,
+    ): AjaxResult = postAuthForm(
+        form,
+        mapOf(
+            "email" to email,
+            "captch" to code,
+            "password2" to password,
+            "repassword" to confirm,
+        ),
+        "reset_password",
+        captcha,
+    )
+
+    private suspend fun postAuthForm(
+        form: PanelForm,
+        values: Map<String, String>,
+        action: String,
+        captcha: SliderCaptcha.Solution?,
+    ): AjaxResult {
+        val url = "$baseUrl/wp-admin/admin-ajax.php".toHttpUrl()
+        val response = client.postForm(url, buildAjaxFormBody(form, values, action, captcha))
+        return parseAjaxResponse(response.status, response.body)
+    }
+
     /**
      * 模拟站点登录表单提交。成功后 cookie 由 Session 自动保存。
      *

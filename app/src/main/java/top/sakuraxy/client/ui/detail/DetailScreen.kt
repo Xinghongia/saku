@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -44,16 +43,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -62,7 +56,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.core.CashierInfo
-import top.sakuraxy.client.core.ContentBlock
 import top.sakuraxy.client.core.Html
 import top.sakuraxy.client.core.PayBox
 import top.sakuraxy.client.core.PayImage
@@ -70,6 +63,7 @@ import top.sakuraxy.client.core.PostComment
 import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.ui.AndroidActions
 import top.sakuraxy.client.ui.auth.SliderCaptchaDialog
+import top.sakuraxy.client.ui.components.ContentBlockItem
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.MiniChip
 import top.sakuraxy.client.ui.components.SakuTopAppBar
@@ -202,30 +196,9 @@ fun DetailScreen(
                     item { DetailHeaderSkeleton() }
                 }
 
-                // 正文
+                // 正文（块渲染与使用手册共用 ContentBlockItem）
                 items(state.blocks) { block ->
-                    when (block) {
-                        is ContentBlock.Paragraph -> Text(
-                            text = block.text.toAnnotated(block.links, linkColor, ::handleLink),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-
-                        is ContentBlock.Heading -> Text(
-                            text = block.text,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-
-                        is ContentBlock.Image -> AsyncImage(
-                            model = block.url,
-                            contentDescription = block.alt,
-                            contentScale = ContentScale.FillWidth,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp)),
-                        )
-
-                        ContentBlock.Separator -> androidx.compose.material3.HorizontalDivider()
-                    }
+                    ContentBlockItem(block = block, linkColor = linkColor, onLink = ::handleLink)
                 }
 
                 // 免费文章：正文内 golink 下载按钮
@@ -283,15 +256,17 @@ fun DetailScreen(
                 // 标签
                 if (detail != null && detail.tags.isNotEmpty()) {
                     item {
+                        // 标签可点：进标签归档页（与网页点标签等价；复用分类页组件）
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             detail.tags.take(10).forEach { tag ->
                                 MiniChip(
-                                    text = "# $tag",
+                                    text = "# ${tag.name}",
                                     container = MaterialTheme.colorScheme.surfaceVariant,
                                     content = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    onClick = { onOpenCategory(tag.name, tag.url) },
                                 )
                             }
                         }
@@ -638,30 +613,5 @@ private fun PayImageViewerDialog(
                 }
             }
         }
-    }
-}
-
-/** 段落文本 + 可点击链接（站内文章链接跳转进 App，其余打开浏览器）；链接色随主题 */
-private fun String.toAnnotated(
-    links: List<top.sakuraxy.client.core.TextLink>,
-    linkColor: androidx.compose.ui.graphics.Color,
-    onLink: (String) -> Unit,
-) = buildAnnotatedString {
-    append(this@toAnnotated)
-    links.forEach { link ->
-        addLink(
-            LinkAnnotation.Url(
-                url = link.url,
-                styles = TextLinkStyles(
-                    style = androidx.compose.ui.text.SpanStyle(
-                        color = linkColor,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                ),
-                linkInteractionListener = { onLink(link.url) },
-            ),
-            start = link.start,
-            end = link.end,
-        )
     }
 }

@@ -2,6 +2,7 @@ package top.sakuraxy.client.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,10 +21,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -36,7 +39,12 @@ import top.sakuraxy.client.vm.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(app: SakuApp, onBack: () -> Unit) {
+fun LoginScreen(
+    app: SakuApp,
+    onBack: () -> Unit,
+    onOpenSignup: () -> Unit,
+    onOpenReset: () -> Unit,
+) {
     val vm: LoginViewModel = viewModel { LoginViewModel(app) }
     val state by vm.state.collectAsState()
 
@@ -97,6 +105,17 @@ fun LoginScreen(app: SakuApp, onBack: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                 }
                 Text("登录")
+            }
+
+            // 与网页登录页一致的两个入口：注册账号 / 找回密码
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = onOpenSignup) { Text("注册账号") }
+                Text("·", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton(onClick = onOpenReset) { Text("找回密码") }
             }
 
             when (val result = state.result) {

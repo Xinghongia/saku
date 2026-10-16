@@ -34,12 +34,13 @@ import top.sakuraxy.client.core.SiteParser
 /**
  * 资源卡片：与站点列表卡片信息对齐——
  * 封面（16:9，兜底图）、角标、标题、付费徽章、分类、#标签、作者、时间、三项统计。
+ * 分类与标签 chip 都可点：分类进分类页、标签进标签页（同一套归档页组件）。
  */
 @Composable
 fun PostCardItem(
     card: SiteParser.PostCard,
     onClick: () -> Unit,
-    onCategoryClick: (SiteParser.CardTerm) -> Unit,
+    onTermClick: (SiteParser.CardTerm) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -102,13 +103,14 @@ fun PostCardItem(
                         )
                     }
                     card.categories.forEach { term ->
-                        MiniChip(text = term.name, onClick = { onCategoryClick(term) })
+                        MiniChip(text = term.name, onClick = { onTermClick(term) })
                     }
                     card.tags.take(4).forEach { tag ->
                         MiniChip(
-                            text = "# $tag",
+                            text = "# ${tag.name}",
                             container = MaterialTheme.colorScheme.surfaceVariant,
                             content = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = { onTermClick(tag) },
                         )
                     }
                 }

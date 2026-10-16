@@ -305,7 +305,7 @@ private fun CardList(
             PostCardItem(
                 card = card,
                 onClick = { card.id?.let(onOpenPost) },
-                onCategoryClick = onOpenCategory,
+                onTermClick = onOpenCategory,
             )
         }
         item {

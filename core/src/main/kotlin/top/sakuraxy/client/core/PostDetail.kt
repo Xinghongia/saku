@@ -176,7 +176,8 @@ data class PostDetail(
     val commentPage: PostCommentPage?,
     /** 面包屑分类路径（不含「首页」「正文」） */
     val breadcrumb: List<SiteParser.CardTerm>,
-    val tags: List<String>,
+    /** 标签（名称不含 # 前缀 + 标签归档链接） */
+    val tags: List<SiteParser.CardTerm>,
 )
 
 /**
@@ -206,8 +207,10 @@ object PostDetailParser {
             else SiteParser.CardTerm(text, href)
         } ?: emptyList()
         val tags = (article ?: doc).select("a[href*=/tag/]").mapNotNull { a ->
-            a.text().trim().removePrefix("#").trim().takeIf { it.isNotBlank() }
-        }.distinct()
+            val href = a.absUrl("href")
+            val name = a.text().trim().removePrefix("#").trim()
+            if (name.isBlank() || href.isBlank()) null else SiteParser.CardTerm(name, href)
+        }.distinctBy { it.url }
         return PostDetail(
             header = parseHeader(doc),
             actions = parseActions(doc),

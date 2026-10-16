@@ -150,7 +150,7 @@ fun SearchScreen(
                         PostCardItem(
                             card = card,
                             onClick = { onOpenPost(card) },
-                            onCategoryClick = onOpenCategory,
+                            onTermClick = onOpenCategory,
                         )
                     }
                     item {

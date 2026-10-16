@@ -142,12 +142,13 @@ class ProfileViewModel(private val app: SakuApp) : ViewModel() {
         }
     }
 
-    /** 退出登录（清 cookie + 持久化会话） */
+    /** 退出登录（清 cookie + 持久化会话），完成后提示退出成功 */
     fun logout() {
         viewModelScope.launch {
             app.client.session.clear()
             app.sessionStore.clear()
             _state.value = UiState.LoggedOut
+            _message.value = "退出成功"
         }
     }
 

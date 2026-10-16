@@ -39,6 +39,8 @@ class PostDetailParserTest {
         assertTrue(detail.breadcrumb.isNotEmpty())
         assertTrue(detail.breadcrumb.none { it.name == "首页" || it.name == "正文" })
         assertTrue(detail.tags.isNotEmpty())
+        // 标签带归档链接（点标签 → 标签页，与网页一致）
+        assertTrue(detail.tags.all { it.url.contains("/tag/") && it.name.isNotBlank() })
     }
 
     @Test

@@ -83,14 +83,10 @@ class UserCenterApi(
         captcha: SliderCaptcha.Solution? = null,
     ): AjaxResult {
         val action = actionOverride ?: form.action ?: return AjaxResult.Fail("表单缺少 action 字段")
-        val merged = linkedMapOf<String, String>()
-        form.fields.forEach { (k, v) -> if (k != "action") merged[k] = v }
-        form.selects.forEach { select -> select.selectedValue?.let { merged[select.name] = it } }
-        merged.putAll(values)
-        merged["action"] = action
-        val body = FormBody.Builder().apply { merged.forEach { (k, v) -> add(k, v) } }
-        captcha?.let { body.addCaptcha(it) }
-        val response = client.postForm(Site.AJAX_URL.toHttpUrl(), body.build())
+        val response = client.postForm(
+            Site.AJAX_URL.toHttpUrl(),
+            buildAjaxFormBody(form, values, action, captcha),
+        )
         return parseAjaxResponse(response.status, response.body)
     }
 

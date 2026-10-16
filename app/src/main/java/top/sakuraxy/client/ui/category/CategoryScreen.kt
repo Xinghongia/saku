@@ -111,7 +111,7 @@ fun CategoryScreen(
             when {
                 state.error != null && state.cards.isEmpty() -> ErrorRetry(state.error!!, vm::retry)
                 state.cards.isEmpty() && state.loading -> CenterLoading()
-                state.cards.isEmpty() -> EmptyHint("这个分类下还没有内容")
+                state.cards.isEmpty() -> EmptyHint("这里还没有内容")
                 else -> LazyColumn(
                     state = listState,
                     contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
@@ -121,7 +121,7 @@ fun CategoryScreen(
                         PostCardItem(
                             card = card,
                             onClick = { onOpenPost(card) },
-                            onCategoryClick = onOpenCategory,
+                            onTermClick = onOpenCategory,
                         )
                     }
                     item {
