@@ -13,4 +13,7 @@ object Site {
 
     /** zibll 主题的 ajax 入口（登录、签到等） */
     const val AJAX_URL: String = "$BASE_URL/wp-admin/admin-ajax.php"
+
+    /** zibll 主题的通用动作入口（点赞、关注等 data-action 操作） */
+    const val ACTION_URL: String = "$BASE_URL/wp-content/themes/zibll/action/action.php"
 }

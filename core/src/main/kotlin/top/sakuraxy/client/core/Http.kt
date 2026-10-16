@@ -8,6 +8,7 @@ import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 
 /**
  * 与网页等效的请求头。
@@ -48,9 +49,24 @@ internal suspend fun OkHttpClient.getText(url: HttpUrl): String = withContext(Di
     }
 }
 
+/** GET 但不因非 2xx 抛异常（用于需要看原始响应体的场景，如黑名单直链） */
+internal suspend fun OkHttpClient.getTextRaw(url: HttpUrl): HttpTextResponse = withContext(Dispatchers.IO) {
+    newCall(Request.Builder().url(url).get().build()).execute().use { response ->
+        HttpTextResponse(response.code, response.body.string())
+    }
+}
+
 internal suspend fun OkHttpClient.postForm(url: HttpUrl, form: FormBody): HttpTextResponse =
     withContext(Dispatchers.IO) {
         newCall(Request.Builder().url(url).post(form).build()).execute().use { response ->
+            HttpTextResponse(response.code, response.body.string())
+        }
+    }
+
+/** multipart 上传（头像/封面/收款码等，字段构造见 [buildMultipartBody]） */
+internal suspend fun OkHttpClient.postMultipart(url: HttpUrl, body: RequestBody): HttpTextResponse =
+    withContext(Dispatchers.IO) {
+        newCall(Request.Builder().url(url).post(body).build()).execute().use { response ->
             HttpTextResponse(response.code, response.body.string())
         }
     }

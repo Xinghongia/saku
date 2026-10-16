@@ -80,15 +80,7 @@ class AuthApi(
         page.formFields.forEach { (name, value) -> if (name != "action") form.add(name, value) }
         form.add("username", username)
         form.add("password", password)
-        captcha?.let {
-            // jQuery 序列化嵌套对象：captcha[ticket]=… 与网页提交格式一致
-            form.add("captcha[ticket]", it.ticket)
-            form.add("captcha[randstr]", it.randstr)
-            form.add("captcha[spliced]", it.spliced.toString())
-            // 与 JS JSON.stringify([1,2]) 相同的紧凑数组格式
-            form.add("captcha[trail]", it.trail.joinToString(",", "[", "]"))
-            form.add("captcha[check]", it.check)
-        }
+        captcha?.let { form.addCaptcha(it) }
         form.add("action", "user_signin")
         val url = "$baseUrl/wp-admin/admin-ajax.php".toHttpUrl()
         val response = client.postForm(url, form.build())
@@ -110,17 +102,11 @@ class AuthApi(
             return when {
                 error == 0 -> SigninResult.Success(msg.ifBlank { "登录成功" })
                 error != null ->
+                    // 失效词判据与全站写操作共享（见 ZibAjax.looksLikeCaptcha）
                     if (msg.looksLikeCaptcha()) SigninResult.NeedsCaptcha(msg)
                     else SigninResult.Failure(msg.ifBlank { "登录失败（error=$error）" })
                 else -> SigninResult.Failure("无法识别的登录响应：${body.snippet(120)}")
             }
         }
-
-        /**
-         * 服务端把「环境异常，请刷新后重新提交」（缺滑块数据）与
-         * 「环境异常，人机验证失败」（拖动未对齐）都归入需要重新走滑块的类别。
-         */
-        private fun String.looksLikeCaptcha(): Boolean =
-            listOf("验证", "captcha", "滑动", "拼图", "环境异常").any { contains(it, ignoreCase = true) }
     }
 }

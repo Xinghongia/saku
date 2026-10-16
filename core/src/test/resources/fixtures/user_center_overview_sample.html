@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head><title>示例用户的用户中心-示例</title></head>
+<body>
+<script>
+    window._win = {uri: 'https://www.example.com/wp-content/themes/zibll', ajax_url: 'https://www.example.com/wp-admin/admin-ajax.php', post_action_nonce: '0123456789'};
+</script>
+
+<!-- 头部卡：封面 / 头像 / 昵称 / 等级 / 徽章 / 签到 / 消息 -->
+<div class="user-info">
+    <img class="lazyload user-cover user-cover-id-10086" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail-lg.svg" data-src="https://www.example.com/uploads/demo-cover.jpg" alt="用户封面">
+    <div class="header-content">
+        <div class="flex header-info relative hh">
+            <div class="flex0 header-avatar">
+                <div class="hover-show relative">
+                    <span class="avatar-img"><img alt="示例用户的头像-示例" src="https://www.example.com/wp-content/themes/zibll/img/avatar-default.png" data-src="https://www.example.com/uploads/demo-avatar-150x150.jpg" class="lazyload avatar avatar-id-10086"></span>
+                </div>
+            </div>
+            <div class="flex1">
+                <div class="em12 name"><span class="display-name">示例用户<img class="lazyload img-icon ml3" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail-null.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/user-level-1.png" title="LV1" alt="等级-LV1-示例"></span></div>
+                <div class="desc user-identity flex ac hh">
+                    <a href="javascript:;"><img class="lazyload ml3 img-icon medal-icon" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail-null.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/medal/medal-1.svg" title="初出茅庐" alt="徽章-初出茅庐-示例"><span class="ml3">1枚徽章<i class="fa fa-angle-right"></i></span></a>
+                    <span class="but" data-clipboard-tag="用户名" data-clipboard-text="示例用户"><i class="fa fa-user-o"></i>示例用户</span>
+                </div>
+                <div class="flex ac">
+                    <a class="but c-blue ml10 pw-1em radius initiate-checkin" href="javascript:;" form-action="user_checkin" ed-text="&lt;i class=&quot;fa fa-calendar-check-o&quot;&gt;&lt;/i&gt;已签到"><i class="fa fa-calendar-check-o"></i>签到</a>
+                    <a rel="nofollow" href="https://www.example.com/message/news" class="msg-news-icon ml10" aria-label="消息通知"><span class="toggle-radius msg-icon"><i class="fa fa-bell-o"></i></span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 统计行：文章 / 评论 / 收藏 / 粉丝 -->
+<div class="author-tag flex jc">
+    <a class="user-statistics-item" href="https://www.example.com/author/10086?tab=post"><div class="em14">0</div><div class="em09 opacity5 mt6">文章</div></a>
+    <a class="user-statistics-item" href="https://www.example.com/author/10086?tab=comment"><div class="em14">1</div><div class="em09 opacity5 mt6">评论</div></a>
+    <a class="user-statistics-item" href="https://www.example.com/author/10086?tab=favorite"><div class="em14">2</div><div class="em09 opacity5 mt6">收藏</div></a>
+    <a class="user-statistics-item" href="https://www.example.com/author/10086?tab=follow"><div class="em14">3</div><div class="em09 opacity5 mt6">粉丝</div></a>
+</div>
+
+<!-- 会员状态 -->
+<div class="flex4"><div class="flex xx gap6">
+    <div class="em09 muted-2-color">当前会员状态</div>
+    <div class="flex ac">
+        <div class="em16 c-red mr10">未开通会员</div>
+    </div>
+    <div class="muted-color em09">开通VIP会员，享受会员专属折扣以及多项特权</div>
+</div></div>
+
+<!-- 侧栏：签到入口 + 余额 / 积分（链接到资产页） -->
+<div class="mt6" style="padding:2px;"><div class="flex ab jsb col-ml6">
+    <a rel="nofollow" style="flex: 1;" class="muted-box padding-6 flex1 radius4" href="https://www.example.com/user/balance">
+        <div class="muted-2-color px12">余额<i class="ml6 fa fa-angle-right em12"></i></div>
+        <div class="flex jsb"><span class="font-bold c-blue-2">0</span><svg class="em14"><use xlink:href="#icon-money-color-2"></use></svg></div>
+    </a>
+    <a rel="nofollow" style="flex: 1;" class="muted-box padding-6 flex1 radius4" href="https://www.example.com/user/balance">
+        <div class="muted-2-color px12">积分<i class="ml6 fa fa-angle-right em12"></i></div>
+        <div class="flex jsb"><span class="font-bold c-yellow">116</span><svg class="em14"><use xlink:href="#icon-points-color"></use></svg></div>
+    </a>
+</div></div>
+
+<!-- 拓展：屏蔽内容开关 -->
+<div class="sxy-uce-switch-list"><div class="flex ac jsb sxy-uce-r18-row">
+    <div class="flex ac gap10 sxy-uce-r18-name"><div class="em16"><i class="fa fa-link"></i></div><div class="px12 muted-color">屏蔽内容</div></div>
+    <div class="flex ac gap6 sxy-uce-r18-control">
+        <span class="px12 muted-color sxy-uce-r18-status">当前：显示中</span>
+        <span class="flex sxy-uce-r18-seg"><a class="sxy-uce-r18-opt" href="https://www.example.com/user/?sxy_uce_r18=1">屏蔽</a><a class="sxy-uce-r18-opt sxy-uce-r18-active" href="https://www.example.com/user/?sxy_uce_r18=0">显示</a></span>
+    </div>
+</div></div>
+</body>
+</html>

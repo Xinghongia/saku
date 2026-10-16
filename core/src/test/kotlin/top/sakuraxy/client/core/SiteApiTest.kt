@@ -57,7 +57,7 @@ class SiteApiTest {
     fun `分类页卡片解析出作者名与相对时间`() {
         val card = SiteParser.parseListPage(listHtml).cards[2]
 
-        assertEquals("树上的小狗", card.authorName)
+        assertEquals("示例读者A", card.authorName)
         assertEquals("21小时前", card.dateText)
         assertEquals("2026-10-14 23:53:43", card.dateTitle)
         assertEquals(1817, card.viewCount)
@@ -145,7 +145,7 @@ class SiteApiTest {
     fun `文章页解析出作者统计与标签`() {
         val stats = SiteParser.parsePostStats(postHtml)
 
-        assertEquals("树上的小狗", stats.authorName)
+        assertEquals("示例读者A", stats.authorName)
         assertTrue(stats.authorAvatar!!.endsWith(".jpg") || stats.authorAvatar.contains("avatar"))
         assertEquals(0, stats.commentCount)
         assertEquals(175, stats.viewCount)
@@ -178,7 +178,7 @@ class SiteApiTest {
 
     @Test
     fun `头像 alt 兜底提取作者名`() {
-        assertEquals("树上的小狗", SiteParser.nameFromAvatarAlt("树上的小狗的头像-SakuraXy"))
+        assertEquals("示例读者A", SiteParser.nameFromAvatarAlt("示例读者A的头像-SakuraXy"))
         assertEquals("樱 玄夜", SiteParser.nameFromAvatarAlt("樱 玄夜的作者的 ta 头像-SakuraXy"))
         assertNull(SiteParser.nameFromAvatarAlt(""))
     }

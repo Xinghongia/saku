@@ -11,6 +11,9 @@ captures/
 # 勘查资料（第三方站点内容与探测会话，不入库）
 research/
 
+# 样本生成器（含真实站点样本的脱敏映射字符串，仅本机使用；fixtures 产物照常入库）
+core/src/test/kotlin/top/sakuraxy/client/core/FixtureBuilderScratch.kt
+
 # 系统
 .DS_Store
 Thumbs.db

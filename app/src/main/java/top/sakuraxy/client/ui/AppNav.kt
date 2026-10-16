@@ -39,6 +39,13 @@ import top.sakuraxy.client.ui.home.HomeScreen
 import top.sakuraxy.client.ui.profile.ProfileScreen
 import top.sakuraxy.client.ui.search.SearchScreen
 import top.sakuraxy.client.ui.settings.SettingsScreen
+import top.sakuraxy.client.ui.user.AccountSecurityScreen
+import top.sakuraxy.client.ui.user.AuthorScreen
+import top.sakuraxy.client.ui.user.ChatScreen
+import top.sakuraxy.client.ui.user.EditProfileScreen
+import top.sakuraxy.client.ui.user.MessageCenterScreen
+import top.sakuraxy.client.ui.user.NewPostScreen
+import top.sakuraxy.client.ui.user.UserPanelScreen
 
 private object Routes {
     const val HOME = "home"
@@ -50,10 +57,27 @@ private object Routes {
     const val LOGIN = "login"
     const val SETTINGS = "settings"
 
+    // ---- v0.5 用户中心 ----
+    const val USER_EDIT = "user/edit"
+    const val USER_ACCOUNT = "user/account"
+    const val USER_MESSAGES = "user/messages?tab={tab}"
+    const val USER_PANEL = "user/panel/{panel}"
+    const val AUTHOR = "author/{authorId}?tab={tab}"
+    const val CHAT = "chat/{userId}"
+    const val NEWPOST = "newpost"
+
     fun category(url: String, name: String) =
         "category?url=${Uri.encode(url)}&name=${Uri.encode(name)}"
 
     fun detail(postId: Long) = "detail/$postId"
+
+    fun userMessages(tab: String? = null) = "user/messages?tab=${tab.orEmpty()}"
+
+    fun userPanel(panel: String) = "user/panel/$panel"
+
+    fun author(authorId: Long, tab: String? = null) = "author/$authorId?tab=${tab.orEmpty()}"
+
+    fun chat(userId: Long) = "chat/$userId"
 }
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
@@ -114,6 +138,7 @@ fun AppNav(app: SakuApp) {
                     onOpenCategory = { term ->
                         navController.navigate(Routes.category(term.url, term.name))
                     },
+                    onOpenNewPost = { navController.navigate(Routes.NEWPOST) },
                 )
             }
 
@@ -141,6 +166,87 @@ fun AppNav(app: SakuApp) {
                     app = app,
                     onOpenLogin = { navController.navigate(Routes.LOGIN) },
                     onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                    onOpenEdit = { navController.navigate(Routes.USER_EDIT) },
+                    onOpenMessages = { navController.navigate(Routes.userMessages()) },
+                    onOpenNewPost = { navController.navigate(Routes.NEWPOST) },
+                    onOpenPanel = { panel ->
+                        // 账户安全有独立页面（多步流程），其余面板共用 UserPanelScreen
+                        if (panel == "account") navController.navigate(Routes.USER_ACCOUNT)
+                        else navController.navigate(Routes.userPanel(panel))
+                    },
+                    onOpenAuthor = { authorId, tab ->
+                        navController.navigate(Routes.author(authorId, tab))
+                    },
+                )
+            }
+
+            composable(Routes.USER_EDIT) {
+                EditProfileScreen(app = app, onBack = { navController.popBackStack() })
+            }
+
+            composable(
+                route = Routes.USER_MESSAGES,
+                arguments = listOf(navArgument("tab") { type = NavType.StringType; defaultValue = "" }),
+            ) { entry ->
+                MessageCenterScreen(
+                    app = app,
+                    initialTab = entry.arguments?.getString("tab")?.ifBlank { null },
+                    onBack = { navController.popBackStack() },
+                    onOpenChat = { userId -> navController.navigate(Routes.chat(userId)) },
+                )
+            }
+
+            composable(
+                route = Routes.USER_PANEL,
+                arguments = listOf(navArgument("panel") { type = NavType.StringType }),
+            ) { entry ->
+                UserPanelScreen(
+                    app = app,
+                    panel = entry.arguments?.getString("panel").orEmpty(),
+                    onBack = { navController.popBackStack() },
+                    onOpenPost = { postId -> navController.navigate(Routes.detail(postId)) },
+                )
+            }
+
+            composable(Routes.USER_ACCOUNT) {
+                AccountSecurityScreen(app = app, onBack = { navController.popBackStack() })
+            }
+
+            composable(
+                route = Routes.AUTHOR,
+                arguments = listOf(
+                    navArgument("authorId") { type = NavType.LongType },
+                    navArgument("tab") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) { entry ->
+                val authorId = entry.arguments?.getLong("authorId") ?: return@composable
+                AuthorScreen(
+                    app = app,
+                    authorId = authorId,
+                    initialTab = entry.arguments?.getString("tab")?.ifBlank { null },
+                    onBack = { navController.popBackStack() },
+                    onOpenPost = { postId -> navController.navigate(Routes.detail(postId)) },
+                    onOpenChat = { userId -> navController.navigate(Routes.chat(userId)) },
+                    onOpenCategory = { term ->
+                        navController.navigate(Routes.category(term.url, term.name))
+                    },
+                )
+            }
+
+            composable(
+                route = Routes.CHAT,
+                arguments = listOf(navArgument("userId") { type = NavType.LongType }),
+            ) { entry ->
+                val userId = entry.arguments?.getLong("userId") ?: return@composable
+                ChatScreen(app = app, userId = userId, onBack = { navController.popBackStack() })
+            }
+
+            composable(Routes.NEWPOST) {
+                NewPostScreen(
+                    app = app,
+                    onBack = { navController.popBackStack() },
+                    onOpenLogin = { navController.navigate(Routes.LOGIN) },
+                    onOpenPost = { postId -> navController.navigate(Routes.detail(postId)) },
                 )
             }
 

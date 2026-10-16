@@ -1,0 +1,50 @@
+<div class="msg-center row gutters-10">
+ <div class="col-sm-3">
+  <div class="msg-center-nav lists-nav zib-widget">
+   <ul class="list-inline scroll-x mini-scrollbar tab-nav-theme">
+    <li class="active"><a data-route="https://www.example.com/message/" href="javascript:;" data-toggle="tab" data-ajax data-target="#msg-tab-news"><img class="lazyload fit-cover" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/msg-news.svg" alt="未读消息">未读消息</a></li>
+    <li><a data-route="https://www.example.com/message/posts" href="javascript:;" data-toggle="tab" data-ajax data-target="#msg-tab-posts"><img class="lazyload fit-cover" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/msg-comment.svg" alt="未读消息">文章评论</a></li>
+    <li><a data-route="https://www.example.com/message/like" href="javascript:;" data-toggle="tab" data-ajax data-target="#msg-tab-like"><img class="lazyload fit-cover" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/msg-followed.svg" alt="未读消息">点赞喜欢</a></li>
+    <li><a data-route="https://www.example.com/message/private" href="javascript:;" data-toggle="tab" data-ajax data-target="#msg-tab-private"><img class="lazyload fit-cover" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/msg-private.svg" alt="未读消息">私信消息</a></li>
+    <li><a data-route="https://www.example.com/message/system" href="javascript:;" data-toggle="tab" data-ajax data-target="#msg-tab-system"><img class="lazyload fit-cover" src="https://www.example.com/wp-content/themes/zibll/img/thumbnail.svg" data-src="https://www.example.com/wp-content/themes/zibll/img/msg-system.svg" alt="未读消息">系统通知</a></li><span class="hide"><a class="muted-2-color but hollow" data-toggle="tab" href="#user_msg_content" data-ajax="1"><i class="fa fa-bell fa-fw" aria-hidden="true"></i></a></span>
+   </ul>
+  </div>
+ </div>
+ <div class="msg-center-content col-sm-9">
+  <div class="zib-widget">
+   <div class="tab-content main-tab-content">
+    <div class="ajaxpager tab-pane fade in active" id="msg-tab-news">
+     <div class="ajax-item abs-center right-top">
+      <i data-toggle="tooltip" title="部分已读消息将会在180天后自动清理" class="muted-color mt20 mr10 fa fa-question-circle-o"></i>
+     </div>
+     <div class="text-center ajax-item" style="padding:60px 0;">
+      <img style="width:280px;opacity: .7;" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="https://www.example.com/wp-content/themes/zibll/img/null.svg" decoding="async" class="lazyload">
+      <noscript>
+       <img style="width:280px;opacity: .7;" src="https://www.example.com/wp-content/themes/zibll/img/null.svg" data-eio="l">
+      </noscript>
+      <p style="margin-top:60px;" class="em09 muted-3-color separator">暂无消息</p>
+     </div>
+     <div class="ajax-pag hide">
+      <div class="next-page ajax-next">
+       <a href="#"></a>
+      </div>
+     </div>
+    </div>
+    <div class="ajaxpager tab-pane fade" id="msg-tab-posts">
+     <span class="post_ajax_trigger hide"><a href="https://www.example.com/message/?msg_center=posts" class="ajax_load ajax-next ajax-open"></a></span>
+    </div>
+    <div class="ajaxpager tab-pane fade" id="msg-tab-like">
+     <span class="post_ajax_trigger hide"><a href="https://www.example.com/message/?msg_center=like" class="ajax_load ajax-next ajax-open"></a></span>
+    </div>
+    <div class="ajaxpager tab-pane fade" id="msg-tab-private">
+     <span class="post_ajax_trigger hide"><a href="https://www.example.com/message/?msg_center=private" class="ajax_load ajax-next ajax-open"></a></span>
+    </div>
+    <div class="ajaxpager tab-pane fade" id="msg-tab-system">
+     <span class="post_ajax_trigger hide"><a href="https://www.example.com/message/?msg_center=system" class="ajax_load ajax-next ajax-open"></a></span>
+    </div>
+    <div class="tab-pane fade ajaxpager" id="user_msg_content">
+    </div>
+   </div>
+  </div>
+ </div>
+</div>

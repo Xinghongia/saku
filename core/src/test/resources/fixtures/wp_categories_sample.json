@@ -73,7 +73,7 @@
             "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
             "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
             "publisher": {
-              "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+              "@id": "https://www.sakuraxy.top/#/schema/person/0123456789abcdef0123456789abc0"
             },
             "potentialAction": [
               {
@@ -96,7 +96,7 @@
               "Person",
               "Organization"
             ],
-            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+            "@id": "https://www.sakuraxy.top/#/schema/person/0123456789abcdef0123456789abc0",
             "name": "玄夜 樱",
             "image": {
               "@type": "ImageObject",
@@ -200,7 +200,7 @@
             "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
             "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
             "publisher": {
-              "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+              "@id": "https://www.sakuraxy.top/#/schema/person/0123456789abcdef0123456789abc0"
             },
             "potentialAction": [
               {
@@ -223,7 +223,7 @@
               "Person",
               "Organization"
             ],
-            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+            "@id": "https://www.sakuraxy.top/#/schema/person/0123456789abcdef0123456789abc0",
             "name": "玄夜 樱",
             "image": {
               "@type": "ImageObject",
@@ -327,7 +327,7 @@
             "name": "玄夜の资源小站 - 获取千万好用软件游戏以及动漫推荐",
             "description": "免费软件、游戏与动漫资源分享站 - 覆盖Windows/Mac/安卓多平台",
             "publisher": {
-              "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7"
+              "@id": "https://www.sakuraxy.top/#/schema/person/0123456789abcdef0123456789abc0"
             },
             "potentialAction": [
               {
@@ -350,7 +350,7 @@
               "Person",
               "Organization"
             ],
-            "@id": "https://www.sakuraxy.top/#/schema/person/137f85da0d2721284e839631299fc4a7",
+            "@id": "https://www.sakuraxy.top/#/schema/person/0123456789abcdef0123456789abc0",
             "name": "玄夜 樱",
             "image": {
               "@type": "ImageObject",
