@@ -135,18 +135,22 @@ object AuthorPageParser {
     fun parseFollowList(html: String): AuthorFollowList {
         val doc = Jsoup.parse(html, Site.BASE_URL)
         val subNav = doc.select("ul.list-inline a[href*=action=author_follow]")
-        fun subUrl(type: String) = subNav.firstOrNull { it.absUrl("href").contains("type=$type") }
-            ?.absUrl("href")?.ifBlank { null }
+        // 精确匹配 type 参数（"type=follow" 会误命中 "type=followed"，必须取整段参数）
+        fun subUrl(type: String) = subNav.firstOrNull {
+            it.absUrl("href").substringAfter("type=", "").substringBefore("&") == type
+        }?.absUrl("href")?.ifBlank { null }
 
-        val users = doc.select("div.author-minicard").map { card ->
-            val nameLink = card.selectFirst("a.display-name")
-            val userId = nameLink?.absUrl("href")
+        val users = doc.select("div.author-minicard").mapNotNull { card ->
+            // ajax 骨架占位（.placeholder）不是真实用户；无昵称链接的也无从展示（同评论 tab 的教训）
+            if (card.selectFirst(".placeholder") != null) return@mapNotNull null
+            val nameLink = card.selectFirst("a.display-name") ?: return@mapNotNull null
+            val userId = nameLink.absUrl("href")
                 ?.let { USER_PATH_RE.find(it)?.groupValues?.get(1)?.toLongOrNull() }
             val level = card.selectFirst("img[title^=LV]")?.attr("title")
                 ?.let { LEVEL_RE.find(it)?.groupValues?.get(1)?.toIntOrNull() }
             AuthorUserCard(
                 userId = userId,
-                name = nameLink?.text()?.trim()?.ifBlank { null },
+                name = nameLink.text().trim().ifBlank { null },
                 avatarUrl = card.selectFirst("img.avatar")?.lazyUrl(),
                 level = level,
                 description = card.selectFirst("dd")?.text()?.trim()?.ifBlank { null },

@@ -106,6 +106,14 @@ class UserPanelParserTest {
     }
 
     @Test
+    fun `资产面板·已签到态：签到链接文案变化后积分仍解析（回归 2026-10-16 显示 0）`() {
+        val balance = UserCenterParser.parseBalance(fixture("user_center_balance_checkedin_sample.html"))
+        assertEquals("0", balance.balance)
+        assertEquals("120", balance.points)
+        assertTrue(balance.records.isNotEmpty())
+    }
+
+    @Test
     fun `会员面板：未开通 + 黄金钻石两档`() {
         val vip = UserCenterParser.parseVip(fixture("user_center_vip_sample.html"))
         assertFalse(vip.isVip)

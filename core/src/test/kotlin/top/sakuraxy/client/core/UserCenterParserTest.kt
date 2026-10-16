@@ -48,9 +48,17 @@ class UserCenterParserTest {
     }
 
     @Test
-    fun `总览解析：已签到与已屏蔽变体`() {
+    fun `总览解析：已签到态（签到入口变为 checkin-details-link）`() {
+        val overview = UserCenterParser.parseOverview(fixture("user_center_overview_checkedin_sample.html"))
+        assertTrue(overview.checkedIn)
+        // 已签到态其它字段照常
+        assertEquals("示例用户", overview.displayName)
+        assertEquals("120", overview.points)
+    }
+
+    @Test
+    fun `总览解析：拓展开关为屏蔽态`() {
         val html = fixture("user_center_overview_sample.html")
-            .replace("</i>签到</a>", "</i>今日已签到</a>")
             .replace(
                 "r18-opt sxy-uce-r18-active\" href=\"https://www.example.com/user/?sxy_uce_r18=0",
                 "r18-opt\" href=\"https://www.example.com/user/?sxy_uce_r18=0",
@@ -60,7 +68,6 @@ class UserCenterParserTest {
                 "r18-opt sxy-uce-r18-active\" href=\"https://www.example.com/user/?sxy_uce_r18=1",
             )
         val overview = UserCenterParser.parseOverview(html)
-        assertTrue(overview.checkedIn)
         assertTrue(overview.r18Blocked)
     }
 

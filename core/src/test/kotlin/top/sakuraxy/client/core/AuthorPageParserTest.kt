@@ -79,4 +79,14 @@ class AuthorPageParserTest {
         assertFalse(first.following)
         assertNotNull(first.avatarUrl)
     }
+
+    @Test
+    fun `粉丝标签·空态：骨架占位卡被过滤（回归 2026-10-16 点击粉丝崩溃）`() {
+        val list = AuthorPageParser.parseFollowList(fixture("author_follow_empty_sample.html"))
+        // 页面里有 6 张 .placeholder 骨架卡，必须全部过滤
+        assertTrue(list.users.isEmpty())
+        // 两个子列表链接照常解析
+        assertTrue(list.followersUrl!!.contains("type=followed"))
+        assertTrue(list.followingUrl!!.contains("type=follow"))
+    }
 }

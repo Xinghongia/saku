@@ -123,6 +123,12 @@ fun ProfileScreen(
             SakuTopAppBar(
                 title = "我的",
                 actions = {
+                    // 消息铃铛（登录后才显示，与网页头部一致）
+                    if (state is ProfileViewModel.UiState.LoggedIn) {
+                        IconButton(onClick = onOpenMessages) {
+                            Icon(Icons.Outlined.Notifications, contentDescription = "消息中心")
+                        }
+                    }
                     IconButton(onClick = onOpenSettings) {
                         Icon(Icons.Outlined.Settings, contentDescription = "设置")
                     }
@@ -141,7 +147,6 @@ fun ProfileScreen(
                 busy = busy,
                 onCheckin = viewModel::checkin,
                 onOpenEdit = onOpenEdit,
-                onOpenMessages = onOpenMessages,
                 onOpenNewPost = onOpenNewPost,
                 onOpenPanel = onOpenPanel,
                 onOpenAuthor = onOpenAuthor,
@@ -208,7 +213,6 @@ private fun UserCenterContent(
     busy: Boolean,
     onCheckin: () -> Unit,
     onOpenEdit: () -> Unit,
-    onOpenMessages: () -> Unit,
     onOpenNewPost: () -> Unit,
     onOpenPanel: (String) -> Unit,
     onOpenAuthor: (Long, String?) -> Unit,
@@ -246,7 +250,6 @@ private fun UserCenterContent(
             busy = busy,
             onCheckin = onCheckin,
             onOpenEdit = onOpenEdit,
-            onOpenMessages = onOpenMessages,
         )
 
         UserStatRow(
@@ -352,7 +355,13 @@ private fun UserCenterContent(
     }
 }
 
-/** 头部卡：封面 + 头像（半悬于封面）+ 昵称/等级/徽章 + 邮箱 + 签到/消息 */
+/**
+ * 头部卡：封面 / 分界线 / 卡片底部三段。
+ * - 名字 + 等级：**贴在封面底部**（分界线上方，头像正右侧）
+ * - 徽章「初出茅庐」：**分界线下方**，头像下半身右侧
+ * - 邮箱：分界线下方整行宽度完整显示 + 签到按钮（已签到 = 显示已签到且不可点）
+ * 头像半悬于分界线（上下各一半）。
+ */
 @Composable
 private fun ProfileHeaderCard(
     overview: UserOverview,
@@ -360,10 +369,11 @@ private fun ProfileHeaderCard(
     busy: Boolean,
     onCheckin: () -> Unit,
     onOpenEdit: () -> Unit,
-    onOpenMessages: () -> Unit,
 ) {
     val coverHeight = 112.dp
     val avatarSize = 82.dp
+    /** 头像右侧内容的统一起点（头像宽 + 间距） */
+    val textStart = 16.dp + avatarSize + 12.dp
     val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -371,13 +381,16 @@ private fun ProfileHeaderCard(
         color = cardColor,
     ) {
         Column {
-            Box(Modifier.fillMaxWidth()) {
-                // 封面（懒加载 data-src 已由解析层补全）
+            // 封面（含名字/等级/半悬头像）
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(coverHeight),
+            ) {
                 val coverFallback = MaterialTheme.colorScheme.primaryContainer
                 Box(
                     Modifier
-                        .fillMaxWidth()
-                        .height(coverHeight)
+                        .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
                 ) {
                     if (!overview.coverUrl.isNullOrBlank()) {
@@ -391,46 +404,26 @@ private fun ProfileHeaderCard(
                         Canvas(Modifier.fillMaxSize()) { drawRect(coverFallback) }
                     }
                 }
-                // 消息铃铛（悬于封面右上，深色圆底保证任何封面下都可见）
-                Surface(
-                    shape = androidx.compose.foundation.shape.CircleShape,
-                    color = Color.Black.copy(alpha = 0.28f),
-                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
-                ) {
-                    IconButton(onClick = onOpenMessages) {
-                        Icon(
-                            Icons.Outlined.Notifications,
-                            contentDescription = "消息中心",
-                            tint = Color.White,
-                        )
-                    }
-                }
-                // 昵称 / 等级 / 徽章：叠在封面右下（避开封面下那半颗头像）
-                Column(
+                // 名字 + 等级：贴封面底边（分界线上方），头像正右侧
+                Row(
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(start = 16.dp + avatarSize + 12.dp, end = 16.dp, bottom = 8.dp),
-                    horizontalAlignment = Alignment.End,
+                        .align(Alignment.BottomStart)
+                        .padding(start = textStart, end = 16.dp, bottom = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = overview.displayName ?: "已登录用户",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = Color.White,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        LevelBadge(overview.level)
-                    }
-                    if (overview.medals.isNotEmpty()) {
-                        Spacer(Modifier.height(4.dp))
-                        MedalChips(overview.medals, onCover = true)
-                    }
+                    Text(
+                        text = overview.displayName ?: "已登录用户",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = Color.White,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    LevelBadge(overview.level)
                 }
-                // 头像半悬于封面底边（最后绘制，压在昵称行左前方的留白区）
+                // 头像半悬于封面底边（压在分界线上，最后绘制）
                 UserAvatar(
                     url = overview.avatarUrl,
                     size = avatarSize,
@@ -442,11 +435,23 @@ private fun ProfileHeaderCard(
                         .clickable(onClick = onOpenEdit),
                 )
             }
-            // 邮箱 + 签到（头像右侧留白 + 头像下沿高度）
+
+            // 分界线下：徽章（头像下半身右侧；行高固定为头像溢出高度，保证不压到下一行）
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp + avatarSize + 12.dp, end = 16.dp, top = 12.dp, bottom = 14.dp),
+                    .height(avatarSize / 2)
+                    .padding(start = textStart, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MedalChips(overview.medals, onCover = false)
+            }
+
+            // 邮箱（整行宽度，完整显示）+ 签到
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(

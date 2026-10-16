@@ -225,8 +225,13 @@ object UserCenterParser {
             ?.parent()?.selectFirst("div.em16")?.text()?.trim()?.ifBlank { null }
         val isVip = vipStatus != null && !vipStatus.contains("未开通")
 
-        val checkin = doc.selectFirst("a.initiate-checkin")
-        val checkedIn = checkin?.text()?.contains("已签到") == true
+        // 签到入口两种形态（2026-10-16 实测）：
+        // 未签到 = a.initiate-checkin（正文文案「签到」，ed-text 属性才含「已签到」）；
+        // 已签到 = a.checkin-details-link（文案「已签到」，点击打开签到明细弹窗）
+        val checkinAnchor = doc.selectFirst("a.initiate-checkin")
+        val checkinDetails = doc.selectFirst("a.checkin-details-link")
+        val checkedIn = checkinDetails != null ||
+            checkinAnchor?.text()?.contains("已签到") == true
 
         val r18Active = doc.selectFirst("a.sxy-uce-r18-opt.sxy-uce-r18-active")
         val r18Blocked = r18Active != null &&
@@ -351,9 +356,21 @@ object UserCenterParser {
         val section = doc.selectFirst("#user-tab-balance") ?: doc
         val text = section.text()
 
-        val balance = Regex("""余额\s*￥?\s*([\d.]+)""").find(text)?.groupValues?.get(1)
+        // 资产卡结构解析：卡片（.zib-widget）里首个 div.mb6 的文案是标签（余额/积分），
+        // 数值在卡片内的 span.font-bold。
+        // 注意不能只靠整页文本正则「积分\s*数字」：签到后签到链接文案由「签到领积分」变为
+        // 「今日已签到」，会失去唯一可匹配的位置而抓不到值（2026-10-16 实测 bug：资产页积分显示 0）；
+        // 记录条目的「积分：120」则是全角冒号，也不符合该正则。
+        val cards = section.select("div.zib-widget")
+        fun cardValue(label: String): String? = cards
+            .firstOrNull { it.selectFirst("div.mb6")?.text()?.trim() == label }
+            ?.selectFirst("span.font-bold")?.text()?.trim()?.ifBlank { null }
+
+        val balance = cardValue("余额")
+            ?: Regex("""余额\s*￥?\s*([\d.]+)""").find(text)?.groupValues?.get(1)
         val pendingIn = Regex("""待转入\s*([\d.]+)""").find(text)?.groupValues?.get(1)
-        val points = Regex("""积分\s*([\d.]+)""").find(text)?.groupValues?.get(1)
+        val points = cardValue("积分")
+            ?: Regex("""积分\s*([\d.]+)""").find(text)?.groupValues?.get(1)
 
         val records = section.select("#record_tab_points > div").mapNotNull { row ->
             val delta = row.selectFirst("b")?.text()?.trim() ?: return@mapNotNull null

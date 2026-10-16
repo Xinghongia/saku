@@ -2,6 +2,7 @@ package top.sakuraxy.client.ui.user
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -107,10 +109,11 @@ fun AuthorScreen(
                     viewModel = viewModel,
                     onOpenChat = { onOpenChat(authorId) },
                 )
-                // 标签栏
+                // 标签栏（横向可滚动，窄屏四个标签不被挤压换行）
                 Row(
                     Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -364,7 +367,11 @@ private fun FollowList(
                 ),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(users, key = { it.userId ?: it.name.hashCode().toLong() }) { user ->
+                // key 兜底用下标，避免解析异常时（userId/name 同时缺失）产生重复 key 崩溃
+                itemsIndexed(
+                    users,
+                    key = { index, user -> user.userId ?: ("idx$index").hashCode().toLong() },
+                ) { _, user ->
                     Surface(
                         Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
