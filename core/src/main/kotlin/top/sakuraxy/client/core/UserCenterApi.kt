@@ -191,6 +191,15 @@ class UserCenterApi(
         return UserCenterParser.parseAccountModals(client.getText(url))
     }
 
+    /** 我的徽章弹窗（action=user_medal_info_modal&id={用户}；分类 + 全部徽章 + 获得/佩戴状态） */
+    suspend fun medalModal(userId: Long): MedalModal? {
+        val url = Site.AJAX_URL.toHttpUrl().newBuilder()
+            .addQueryParameter("action", "user_medal_info_modal")
+            .addQueryParameter("id", userId.toString())
+            .build()
+        return UserCenterParser.parseMedalModal(client.getText(url))
+    }
+
     /** 我的订单（tab=all|wait-pay） */
     suspend fun orders(tab: String): List<OrderItem> {
         val url = Site.AJAX_URL.toHttpUrl().newBuilder()

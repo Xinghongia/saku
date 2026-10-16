@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.core.AjaxResult
+import top.sakuraxy.client.core.MedalModal
 import top.sakuraxy.client.core.UserOverview
 
 /**
@@ -47,6 +48,18 @@ class ProfileViewModel(private val app: SakuApp) : ViewModel() {
     /** 付费类操作的「请到网站操作」提示 */
     private val _siteOnlyHint = MutableStateFlow(false)
     val siteOnlyHint: StateFlow<Boolean> = _siteOnlyHint.asStateFlow()
+
+    /** 「我的徽章」弹窗状态：null = 未打开 */
+    sealed interface MedalUi {
+        data object Loading : MedalUi
+
+        data class Content(val modal: MedalModal) : MedalUi
+
+        data class Error(val message: String) : MedalUi
+    }
+
+    private val _medalUi = MutableStateFlow<MedalUi?>(null)
+    val medalUi: StateFlow<MedalUi?> = _medalUi.asStateFlow()
 
     private var loading = false
 
@@ -136,6 +149,28 @@ class ProfileViewModel(private val app: SakuApp) : ViewModel() {
             app.sessionStore.clear()
             _state.value = UiState.LoggedOut
         }
+    }
+
+    /** 打开「我的徽章」弹窗（每次打开现取，nonce 无关但保持与网页同款的实时数据） */
+    fun openMedals() {
+        val current = _state.value as? UiState.LoggedIn ?: return
+        _medalUi.value = MedalUi.Loading
+        viewModelScope.launch {
+            try {
+                val modal = app.client.users.medalModal(current.userId)
+                _medalUi.value = if (modal != null) {
+                    MedalUi.Content(modal)
+                } else {
+                    MedalUi.Error("徽章数据解析失败")
+                }
+            } catch (e: Exception) {
+                _medalUi.value = MedalUi.Error(e.message ?: "加载失败，请重试")
+            }
+        }
+    }
+
+    fun dismissMedals() {
+        _medalUi.value = null
     }
 
     fun consumeMessage() {

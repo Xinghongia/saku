@@ -176,6 +176,20 @@ data class OrderItem(
     val downloadUrl: String?,
 )
 
+/** 我的徽章弹窗中的一个徽章（[earned]=用户是否已获得，未获得在网页上灰显） */
+data class MedalInfo(val name: String, val iconUrl: String?, val earned: Boolean)
+
+/** 徽章分类（成长 / 荣誉 / 成就 / 限定） */
+data class MedalCategory(val name: String, val medals: List<MedalInfo>)
+
+/** 我的徽章弹窗（admin-ajax user_medal_info_modal）：当前佩戴 + 全部分类与获得状态 */
+data class MedalModal(
+    val avatarUrl: String?,
+    /** 当前佩戴的徽章名（头部小图标 title="当前佩戴：X"，可能为空） */
+    val currentWorn: String?,
+    val categories: List<MedalCategory>,
+)
+
 /** 打赏收款面板 */
 data class RewardsPanel(
     val form: PanelForm,
@@ -485,6 +499,39 @@ object UserCenterParser {
             passwordForm = passwordForm,
             resetForm = resetForm,
             resetSendAction = resetSend,
+        )
+    }
+
+    /**
+     * 我的徽章弹窗（admin-ajax action=user_medal_info_modal 的 HTML 片段，2026-10-16 实测）：
+     * div.medal-cat-box 分类 → div.medal-card（is-has=已获得 / no-has=未获得）+ 徽章名 + 图标。
+     */
+    fun parseMedalModal(html: String): MedalModal? {
+        val doc = Jsoup.parse(html, Site.BASE_URL)
+        val boxes = doc.select("div.medal-cat-box")
+        if (boxes.isEmpty()) return null
+        val categories = boxes.mapNotNull { box ->
+            val catName = box.selectFirst("b.medal-cat-name")?.text()?.trim()?.ifBlank { null }
+                ?: return@mapNotNull null
+            val medals = box.select("div.medal-card").mapNotNull { card ->
+                val name = card.selectFirst("div.muted-color")?.text()?.trim()?.ifBlank { null }
+                    ?: return@mapNotNull null
+                MedalInfo(
+                    name = name,
+                    iconUrl = card.selectFirst("img.medal-icon")?.lazyUrl(),
+                    earned = card.hasClass("is-has"),
+                )
+            }
+            MedalCategory(catName, medals)
+        }
+        if (categories.isEmpty()) return null
+        return MedalModal(
+            avatarUrl = doc.select("img.avatar").firstNotNullOfOrNull { it.lazyUrl() },
+            // 头部小图标 title="当前佩戴：初出茅庐"；无佩戴徽章时站点不放该图标
+            currentWorn = doc.selectFirst("img.medal-icon[title]")
+                ?.attr("title")?.substringAfter("佩戴", "")?.trimStart('：', ':', ' ')
+                ?.ifBlank { null },
+            categories = categories,
         )
     }
 

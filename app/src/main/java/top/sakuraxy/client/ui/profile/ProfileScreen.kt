@@ -103,6 +103,7 @@ fun ProfileScreen(
     val message by viewModel.message.collectAsState()
     val busy by viewModel.busy.collectAsState()
     val siteOnly by viewModel.siteOnlyHint.collectAsState()
+    val medalUi by viewModel.medalUi.collectAsState()
     val context = LocalContext.current
 
     // 回到本页（含首次进入）静默刷新：资料编辑/头像修改返回后立即可见
@@ -117,6 +118,13 @@ fun ProfileScreen(
         }
     }
     if (siteOnly) SiteOnlyDialog(onDismiss = viewModel::dismissSiteOnlyHint)
+    medalUi?.let { current ->
+        MedalWallDialog(
+            state = current,
+            onDismiss = viewModel::dismissMedals,
+            onRetry = viewModel::openMedals,
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -151,6 +159,7 @@ fun ProfileScreen(
                 onOpenPanel = onOpenPanel,
                 onOpenAuthor = onOpenAuthor,
                 onR18Change = viewModel::setR18Blocked,
+                onViewMedals = viewModel::openMedals,
                 onLogout = viewModel::logout,
                 modifier = Modifier.padding(padding),
             )
@@ -217,6 +226,7 @@ private fun UserCenterContent(
     onOpenPanel: (String) -> Unit,
     onOpenAuthor: (Long, String?) -> Unit,
     onR18Change: (Boolean) -> Unit,
+    onViewMedals: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -250,6 +260,7 @@ private fun UserCenterContent(
             busy = busy,
             onCheckin = onCheckin,
             onOpenEdit = onOpenEdit,
+            onViewMedals = onViewMedals,
         )
 
         UserStatRow(
@@ -369,6 +380,7 @@ private fun ProfileHeaderCard(
     busy: Boolean,
     onCheckin: () -> Unit,
     onOpenEdit: () -> Unit,
+    onViewMedals: () -> Unit,
 ) {
     val coverHeight = 112.dp
     val avatarSize = 82.dp
@@ -437,6 +449,7 @@ private fun ProfileHeaderCard(
             }
 
             // 分界线下：徽章（头像下半身右侧；行高固定为头像溢出高度，保证不压到下一行）
+            // 行尾「查看所有」→ 打开与网页同款的「我的徽章」弹窗
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -445,6 +458,15 @@ private fun ProfileHeaderCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 MedalChips(overview.medals, onCover = false)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "查看所有",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clickable(onClick = onViewMedals)
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                )
             }
 
             // 邮箱（整行宽度，完整显示）+ 签到

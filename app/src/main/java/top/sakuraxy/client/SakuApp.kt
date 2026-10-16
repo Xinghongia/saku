@@ -6,6 +6,7 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
+import coil3.svg.SvgDecoder
 import top.sakuraxy.client.core.SakuClient
 
 class SakuApp : Application(), SingletonImageLoader.Factory {
@@ -27,11 +28,12 @@ class SakuApp : Application(), SingletonImageLoader.Factory {
         settingsStore = SettingsStore(this)
     }
 
-    /** 图片也走同一个 HTTP 客户端：UA 与登录会话保持一致 */
+    /** 图片也走同一个 HTTP 客户端：UA 与登录会话保持一致；SVG 解码用于站点徽章等矢量素材 */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
             .components {
                 add(OkHttpNetworkFetcherFactory(callFactory = { client.http }))
+                add(SvgDecoder.Factory())
             }
             .crossfade(true)
             .build()

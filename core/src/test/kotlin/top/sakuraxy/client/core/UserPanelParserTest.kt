@@ -183,6 +183,29 @@ class UserPanelParserTest {
         assertNull(UserCenterParser.parseAccountModals("<html></html>"))
     }
 
+    // ---- 我的徽章弹窗 ----
+
+    @Test
+    fun `我的徽章弹窗：四个分类 佩戴态 与获得标记`() {
+        val modal = UserCenterParser.parseMedalModal(fixture("medal_modal_sample.html"))
+        assertNotNull(modal)
+        modal!!
+        assertEquals("初出茅庐", modal.currentWorn)
+        assertEquals(listOf("成长", "荣誉", "成就", "限定"), modal.categories.map { it.name })
+        assertEquals(listOf(10, 12, 4, 4), modal.categories.map { it.medals.size })
+        // 已获得：初出茅庐（彩色）；其余未获得（灰显）
+        val all = modal.categories.flatMap { it.medals }
+        assertEquals(listOf("初出茅庐"), all.filter { it.earned }.map { it.name })
+        assertEquals("初出茅庐", all.first().name)
+        assertTrue(all.first().iconUrl!!.endsWith("medal-1.svg"))
+        assertNotNull(modal.avatarUrl)
+    }
+
+    @Test
+    fun `我的徽章弹窗：缺失内容返回空`() {
+        assertNull(UserCenterParser.parseMedalModal("<html></html>"))
+    }
+
     // ---- 订单 ----
 
     @Test
