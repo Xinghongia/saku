@@ -45,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -102,6 +103,7 @@ fun ProfileScreen(
     val state by viewModel.state.collectAsState()
     val message by viewModel.message.collectAsState()
     val busy by viewModel.busy.collectAsState()
+    val refreshing by viewModel.refreshing.collectAsState()
     val siteOnly by viewModel.siteOnlyHint.collectAsState()
     val medalUi by viewModel.medalUi.collectAsState()
     val context = LocalContext.current
@@ -150,19 +152,27 @@ fun ProfileScreen(
             is ProfileViewModel.UiState.Error ->
                 ErrorRetry(current.message, onRetry = viewModel::load, modifier = Modifier.padding(padding))
             ProfileViewModel.UiState.LoggedOut -> LoggedOutContent(onOpenLogin, Modifier.padding(padding))
-            is ProfileViewModel.UiState.LoggedIn -> UserCenterContent(
-                state = current,
-                busy = busy,
-                onCheckin = viewModel::checkin,
-                onOpenEdit = onOpenEdit,
-                onOpenNewPost = onOpenNewPost,
-                onOpenPanel = onOpenPanel,
-                onOpenAuthor = onOpenAuthor,
-                onR18Change = viewModel::setR18Blocked,
-                onViewMedals = viewModel::openMedals,
-                onLogout = viewModel::logout,
-                modifier = Modifier.padding(padding),
-            )
+            is ProfileViewModel.UiState.LoggedIn -> PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = viewModel::refresh,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+            ) {
+                UserCenterContent(
+                    state = current,
+                    busy = busy,
+                    onCheckin = viewModel::checkin,
+                    onOpenEdit = onOpenEdit,
+                    onOpenNewPost = onOpenNewPost,
+                    onOpenPanel = onOpenPanel,
+                    onOpenAuthor = onOpenAuthor,
+                    onR18Change = viewModel::setR18Blocked,
+                    onViewMedals = viewModel::openMedals,
+                    onLogout = viewModel::logout,
+                    modifier = Modifier,
+                )
+            }
         }
     }
 }

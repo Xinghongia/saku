@@ -1,6 +1,7 @@
 package top.sakuraxy.client.ui.detail
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -56,6 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.core.CashierInfo
+import top.sakuraxy.client.core.ContentBlock
 import top.sakuraxy.client.core.Html
 import top.sakuraxy.client.core.PayBox
 import top.sakuraxy.client.core.PayImage
@@ -64,10 +67,13 @@ import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.ui.AndroidActions
 import top.sakuraxy.client.ui.auth.SliderCaptchaDialog
 import top.sakuraxy.client.ui.components.ContentBlockItem
+import top.sakuraxy.client.ui.components.ContentViewerDialog
 import top.sakuraxy.client.ui.components.ErrorRetry
+import top.sakuraxy.client.ui.components.ImageActionsSheet
 import top.sakuraxy.client.ui.components.MiniChip
 import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.ui.components.SiteOnlyDialog
+import top.sakuraxy.client.ui.components.rememberSaveImage
 import top.sakuraxy.client.vm.DetailViewModel
 
 /**
@@ -94,6 +100,11 @@ fun DetailScreen(
     var replyTo by remember { mutableStateOf<PostComment?>(null) }
     /** 全屏查看的付费图片（null = 未打开） */
     var viewerImage by remember { mutableStateOf<PayImage?>(null) }
+    /** 全屏查看的正文图片（与付费图库互不相干） */
+    var contentViewer by remember { mutableStateOf<ContentBlock.Image?>(null) }
+    /** 长按正文图片弹出的操作菜单 */
+    var contentImageMenu by remember { mutableStateOf<ContentBlock.Image?>(null) }
+    val saveImage = rememberSaveImage(app.client.http)
 
     fun handleLink(url: String) {
         val linkedId = SiteParser.postIdFromUrl(url)
@@ -173,7 +184,7 @@ fun DetailScreen(
                             header = detail.header,
                             following = state.following,
                             isSelf = isSelf,
-                            busy = state.busyKey != null,
+                            busy = "follow" in state.busyKeys,
                             onOpenAuthor = onOpenAuthor,
                             onOpenChat = onOpenChat,
                             onToggleFollow = vm::toggleFollow,
@@ -196,9 +207,16 @@ fun DetailScreen(
                     item { DetailHeaderSkeleton() }
                 }
 
-                // 正文（块渲染与使用手册共用 ContentBlockItem）
+                // 正文（块渲染与使用手册共用 ContentBlockItem）；
+                // 正文图片：点开全屏（可缩放），长按弹常用操作（保存到相册等）
                 items(state.blocks) { block ->
-                    ContentBlockItem(block = block, linkColor = linkColor, onLink = ::handleLink)
+                    ContentBlockItem(
+                        block = block,
+                        linkColor = linkColor,
+                        onLink = ::handleLink,
+                        onImageTap = { contentViewer = it },
+                        onImageLongPress = { contentImageMenu = it },
+                    )
                 }
 
                 // 免费文章：正文内 golink 下载按钮
@@ -232,7 +250,7 @@ fun DetailScreen(
                         PayCard(
                             pay = detail.payBox,
                             resolvingHref = state.resolvingHref,
-                            busy = state.busyKey != null,
+                            busy = "cashier" in state.busyKeys,
                             qr = state.qr,
                             onBuy = vm::openCashier,
                             onResolve = vm::resolveDownload,
@@ -250,7 +268,7 @@ fun DetailScreen(
 
                 // 评分卡
                 detail?.rating?.let { rating ->
-                    item { RatingSection(rating = rating, busy = state.busyKey != null, onRate = vm::rate) }
+                    item { RatingSection(rating = rating, busy = "rate" in state.busyKeys, onRate = vm::rate) }
                 }
 
                 // 标签
@@ -281,7 +299,9 @@ fun DetailScreen(
                             liked = d.actions.liked,
                             favoriteCount = d.actions.favoriteCount,
                             favorited = d.actions.favorited,
-                            enabled = state.busyKey == null,
+                            // 各按钮只在自己的操作在途时禁用；分享是本地操作，始终可用
+                            likeBusy = "like" in state.busyKeys,
+                            favBusy = "fav" in state.busyKeys,
                             onLike = vm::toggleLike,
                             onShare = {
                                 state.post?.let { post ->
@@ -304,7 +324,7 @@ fun DetailScreen(
                             card = card,
                             following = state.following,
                             isSelf = isSelf,
-                            busy = state.busyKey != null,
+                            busy = "follow" in state.busyKeys,
                             onToggleFollow = vm::toggleFollow,
                             onOpenAuthor = onOpenAuthor,
                             onOpenPost = onOpenPost,
@@ -328,7 +348,7 @@ fun DetailScreen(
                     CommentComposer(
                         loggedIn = state.loggedIn,
                         replyToName = replyTo?.authorName,
-                        busy = state.busyKey == "comment",
+                        busy = "comment" in state.busyKeys,
                         clearTick = state.commentSuccessTick,
                         onSubmit = { text ->
                             vm.requestSubmitComment(text, replyTo?.id ?: 0L)
@@ -350,7 +370,8 @@ fun DetailScreen(
                     items(state.comments, key = { it.id }) { comment ->
                         CommentRow(
                             comment = comment,
-                            busy = state.busyKey != null,
+                            // 只禁这一条评论自己的点赞（其他评论不受影响）
+                            busy = "clike-${comment.id}" in state.busyKeys,
                             onLike = { vm.toggleCommentLike(comment) },
                             onReply = { replyTo = comment },
                         )
@@ -377,7 +398,7 @@ fun DetailScreen(
     // ---- 弹窗 ----
 
     // 评论滑块（每次提交都要；服务端再要滑块时 pendingComment 保留 → 自动重弹）
-    if (state.pendingComment != null && state.busyKey != "comment") {
+    if (state.pendingComment != null && "comment" !in state.busyKeys) {
         SliderCaptchaDialog(
             httpClient = app.client.http,
             onDismiss = vm::cancelPendingComment,
@@ -388,7 +409,7 @@ fun DetailScreen(
     state.cashier?.let { info ->
         ConfirmBuyDialog(
             info = info,
-            busy = state.busyKey == "buy",
+            busy = "buy" in state.busyKeys,
             onConfirm = vm::confirmBuy,
             onDismiss = vm::dismissCashier,
         )
@@ -422,6 +443,29 @@ fun DetailScreen(
             qr = state.qr[image.url],
             onRetry = { vm.retryQr(image.url) },
             onDismiss = { viewerImage = null },
+        )
+    }
+
+    // 正文图片全屏查看（双指缩放/双击放大；底部保存/复制/分享）
+    contentViewer?.let { image ->
+        ContentViewerDialog(
+            url = image.url,
+            description = image.alt,
+            onDismiss = { contentViewer = null },
+            onSave = { saveImage(image.url) },
+            onCopy = { AndroidActions.copyToClipboard(context, image.url) },
+            onShare = { AndroidActions.shareText(context, image.url) },
+        )
+    }
+
+    // 长按正文图片：常用操作
+    contentImageMenu?.let { image ->
+        ImageActionsSheet(
+            onDismiss = { contentImageMenu = null },
+            onSave = { contentImageMenu = null; saveImage(image.url) },
+            onCopy = { contentImageMenu = null; AndroidActions.copyToClipboard(context, image.url) },
+            onShare = { contentImageMenu = null; AndroidActions.shareText(context, image.url) },
+            onOpenBrowser = { contentImageMenu = null; AndroidActions.openInBrowser(context, image.url) },
         )
     }
 
@@ -593,7 +637,12 @@ private fun PayImageViewerDialog(
                                 Spacer(Modifier.width(6.dp))
                                 Text("复制链接")
                             }
-                            OutlinedButton(onClick = { AndroidActions.openInBrowser(context, link) }) {
+                            // 黑底上的描边按钮显式用白字白边（浅色主题默认深色文字看不清）
+                            OutlinedButton(
+                                onClick = { AndroidActions.openInBrowser(context, link) },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                            ) {
                                 Text("浏览器打开")
                             }
                         }

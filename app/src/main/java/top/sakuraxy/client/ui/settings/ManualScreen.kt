@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -27,8 +30,11 @@ import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.ui.AndroidActions
 import top.sakuraxy.client.ui.components.CenterLoading
 import top.sakuraxy.client.ui.components.ContentBlockItem
+import top.sakuraxy.client.ui.components.ContentViewerDialog
 import top.sakuraxy.client.ui.components.ErrorRetry
+import top.sakuraxy.client.ui.components.ImageActionsSheet
 import top.sakuraxy.client.ui.components.SakuTopAppBar
+import top.sakuraxy.client.ui.components.rememberSaveImage
 import top.sakuraxy.client.vm.ManualViewModel
 
 /**
@@ -47,6 +53,10 @@ fun ManualScreen(
     val state by vm.state.collectAsState()
     val context = LocalContext.current
     val linkColor = MaterialTheme.colorScheme.primary
+    /** 正文图片：点开全屏 / 长按常用操作（与详情页一致） */
+    var contentViewer by remember { mutableStateOf<top.sakuraxy.client.core.ContentBlock.Image?>(null) }
+    var contentImageMenu by remember { mutableStateOf<top.sakuraxy.client.core.ContentBlock.Image?>(null) }
+    val saveImage = rememberSaveImage(app.client.http)
 
     fun handleLink(url: String) {
         val linkedId = SiteParser.postIdFromUrl(url)
@@ -84,9 +94,36 @@ fun ManualScreen(
                     )
                 }
                 items(state.blocks) { block ->
-                    ContentBlockItem(block = block, linkColor = linkColor, onLink = ::handleLink)
+                    ContentBlockItem(
+                        block = block,
+                        linkColor = linkColor,
+                        onLink = ::handleLink,
+                        onImageTap = { contentViewer = it },
+                        onImageLongPress = { contentImageMenu = it },
+                    )
                 }
             }
         }
+    }
+
+    // 正文图片全屏查看 / 长按操作（与详情页同一套组件）
+    contentViewer?.let { image ->
+        ContentViewerDialog(
+            url = image.url,
+            description = image.alt,
+            onDismiss = { contentViewer = null },
+            onSave = { saveImage(image.url) },
+            onCopy = { AndroidActions.copyToClipboard(context, image.url) },
+            onShare = { AndroidActions.shareText(context, image.url) },
+        )
+    }
+    contentImageMenu?.let { image ->
+        ImageActionsSheet(
+            onDismiss = { contentImageMenu = null },
+            onSave = { contentImageMenu = null; saveImage(image.url) },
+            onCopy = { contentImageMenu = null; AndroidActions.copyToClipboard(context, image.url) },
+            onShare = { contentImageMenu = null; AndroidActions.shareText(context, image.url) },
+            onOpenBrowser = { contentImageMenu = null; AndroidActions.openInBrowser(context, image.url) },
+        )
     }
 }

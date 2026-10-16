@@ -7,6 +7,8 @@ import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import top.sakuraxy.client.core.SakuClient
 
 class SakuApp : Application(), SingletonImageLoader.Factory {
@@ -20,6 +22,17 @@ class SakuApp : Application(), SingletonImageLoader.Factory {
 
     lateinit var settingsStore: SettingsStore
         private set
+
+    /**
+     * 内容变更信号：详情页等处的写操作（收藏/关注/点赞/评论/积分购买）成功后自增；
+     * 跨页面展示的用户数据（如「我的」页统计与资产）订阅它静默刷新——
+     * 返回「我的」页时数字已是新值，不必再进二级页面才看到。
+     */
+    val contentRevision = MutableStateFlow(0L)
+
+    fun notifyContentChanged() {
+        contentRevision.update { it + 1 }
+    }
 
     override fun onCreate() {
         super.onCreate()

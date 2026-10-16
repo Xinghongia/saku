@@ -139,8 +139,13 @@ fun AuthorScreen(
     ) { padding ->
         val error = state.error
         when {
-            state.loading -> CenterLoading(Modifier.padding(padding))
-            error != null -> ErrorRetry(error, onRetry = viewModel::retry, modifier = Modifier.padding(padding))
+            // 首次进入（头部还没有数据）才整页加载/报错；
+            // 之后切标签只在内容区刷新，页头与标签栏保持不动（2026-10-16 驾驶员走查反馈）
+            state.info == null && error != null ->
+                ErrorRetry(error, onRetry = viewModel::retry, modifier = Modifier.padding(padding))
+
+            state.info == null -> CenterLoading(Modifier.padding(padding))
+
             else -> Column(Modifier.fillMaxSize().padding(padding)) {
                 AuthorHeader(
                     viewModel = viewModel,
@@ -162,16 +167,19 @@ fun AuthorScreen(
                         )
                     }
                 }
-                when (state.tab) {
-                    "comment" -> CommentList(state.comments, onOpenPost)
-                    "follow" -> FollowList(
-                        users = state.followList?.users.orEmpty(),
-                        sub = state.followSub,
-                        onSwitchSub = viewModel::switchFollowSub,
-                        onToggleFollow = viewModel::toggleFollowUser,
-                        onOpenAuthor = { id -> /* 已是作者页，忽略自跳 */ },
-                    )
-                    else -> CardList(viewModel, state, listState, onOpenPost, onOpenCategory)
+                // 内容区：切标签只在这块转圈/报错，页头不受影响
+                TabContent(loading = state.loading, error = error, onRetry = viewModel::retry) {
+                    when (state.tab) {
+                        "comment" -> CommentList(state.comments, onOpenPost)
+                        "follow" -> FollowList(
+                            users = state.followList?.users.orEmpty(),
+                            sub = state.followSub,
+                            onSwitchSub = viewModel::switchFollowSub,
+                            onToggleFollow = viewModel::toggleFollowUser,
+                            onOpenAuthor = { id -> /* 已是作者页，忽略自跳 */ },
+                        )
+                        else -> CardList(viewModel, state, listState, onOpenPost, onOpenCategory)
+                    }
                 }
             }
         }
@@ -188,6 +196,20 @@ fun AuthorScreen(
                 viewModel.jumpTo(page)
             },
         )
+    }
+}
+
+@Composable
+private fun TabContent(
+    loading: Boolean,
+    error: String?,
+    onRetry: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    when {
+        loading -> CenterLoading()
+        error != null -> ErrorRetry(error, onRetry)
+        else -> content()
     }
 }
 

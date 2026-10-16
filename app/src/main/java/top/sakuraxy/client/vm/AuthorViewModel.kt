@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import top.sakuraxy.client.SakuApp
@@ -61,8 +62,57 @@ class AuthorViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    /** 静默刷新在途（不显示加载态、不改滚动位置） */
+    private var quietBusy = false
+
     init {
         load(1, Mode.Reset)
+        viewModelScope.launch {
+            // 详情页的写操作（收藏/关注/点赞/评论/购买）成功后自增 → 静默刷新本页；
+            // 从文章返回时标签计数（如「收藏 N」）与列表已是新值（2026-10-16 驾驶员走查反馈）
+            app.contentRevision.drop(1).collect { quietRefresh() }
+        }
+    }
+
+    /**
+     * 静默刷新当前标签：不动加载态、不动滚动位置、失败保留现有内容。
+     * 分页标签只在「仅加载了第 1 页」时替换列表（深页码时只更新头部计数，避免丢已加载内容）。
+     */
+    private fun quietRefresh() {
+        val tab = _state.value.tab
+        if (quietBusy || _state.value.info == null) return
+        quietBusy = true
+        viewModelScope.launch {
+            try {
+                val result = app.client.author.page(authorId, tab, 1)
+                _state.update { s ->
+                    if (s.tab != tab) return@update s // 用户已切走，丢弃这次结果
+                    val freshInfo = result.info ?: s.info
+                    when {
+                        tab !in UiState.PAGED_TABS -> s.copy(
+                            info = freshInfo,
+                            comments = if (tab == "comment") result.comments else s.comments,
+                            // 粉丝子列表只在不处于「关注」子列表时替换（返回的是默认粉丝列表）
+                            followList = if (tab == "follow" && s.followSub == "followed") {
+                                result.followList ?: s.followList
+                            } else s.followList,
+                        )
+
+                        s.window.loadedMax == 1 -> s.copy(
+                            info = freshInfo,
+                            cards = result.cards,
+                            window = s.window.afterReset(1, result.listPage?.maxPage),
+                        )
+
+                        else -> s.copy(info = freshInfo) // 深页码：只更新计数，保留已加载内容
+                    }
+                }
+            } catch (_: Exception) {
+                // 静默：保留现有内容
+            } finally {
+                quietBusy = false
+            }
+        }
     }
 
     fun setTab(tab: String) {

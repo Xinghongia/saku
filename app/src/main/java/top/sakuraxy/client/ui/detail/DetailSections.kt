@@ -572,7 +572,9 @@ fun InteractionBar(
     liked: Boolean,
     favoriteCount: Int?,
     favorited: Boolean,
-    enabled: Boolean,
+    /** 点赞/收藏各自独立：只在本人操作在途时禁用，互不牵连（分享永远可用） */
+    likeBusy: Boolean,
+    favBusy: Boolean,
     onLike: () -> Unit,
     onShare: () -> Unit,
     onFavorite: () -> Unit,
@@ -597,7 +599,7 @@ fun InteractionBar(
                     label = "点赞",
                     count = likeCount,
                     active = liked,
-                    enabled = enabled,
+                    enabled = !likeBusy,
                     onClick = onLike,
                 )
                 ActionItem(
@@ -622,7 +624,7 @@ fun InteractionBar(
                     label = if (favorited) "已收藏" else "收藏",
                     count = favoriteCount,
                     active = favorited,
-                    enabled = enabled,
+                    enabled = !favBusy,
                     onClick = onFavorite,
                 )
             }

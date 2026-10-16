@@ -1,5 +1,6 @@
 package top.sakuraxy.client.ui.components
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -23,6 +24,7 @@ import top.sakuraxy.client.core.TextLink
  * 正文块渲染（文章详情页与使用手册共用）：
  * 段落/标题/图片/分隔线；段落与标题里的链接由 [onLink] 决定去向
  * （调用方：站内文章跳进 App，其余打开浏览器）。
+ * 图片可选接入点击/长按回调（点开全屏查看、长按常用操作）。
  */
 @Composable
 fun ContentBlockItem(
@@ -30,6 +32,8 @@ fun ContentBlockItem(
     linkColor: Color,
     onLink: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onImageTap: ((ContentBlock.Image) -> Unit)? = null,
+    onImageLongPress: ((ContentBlock.Image) -> Unit)? = null,
 ) {
     when (block) {
         is ContentBlock.Paragraph -> Text(
@@ -44,14 +48,25 @@ fun ContentBlockItem(
             modifier = modifier,
         )
 
-        is ContentBlock.Image -> AsyncImage(
-            model = block.url,
-            contentDescription = block.alt,
-            contentScale = ContentScale.FillWidth,
-            modifier = modifier
+        is ContentBlock.Image -> {
+            val imageModifier = modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp)),
-        )
+                .clip(RoundedCornerShape(10.dp))
+                .then(
+                    if (onImageTap != null || onImageLongPress != null) {
+                        Modifier.combinedClickable(
+                            onClick = { onImageTap?.invoke(block) },
+                            onLongClick = { onImageLongPress?.invoke(block) },
+                        )
+                    } else Modifier,
+                )
+            AsyncImage(
+                model = block.url,
+                contentDescription = block.alt,
+                contentScale = ContentScale.FillWidth,
+                modifier = imageModifier,
+            )
+        }
 
         ContentBlock.Separator -> HorizontalDivider(modifier)
     }

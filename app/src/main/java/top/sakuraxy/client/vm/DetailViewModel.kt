@@ -34,7 +34,8 @@ import top.sakuraxy.client.core.WpPost
  * 文章详情：REST 正文 + 页面解析（作者/互动/评分/付费区/作者卡/评论）+ 写操作。
  *
  * 写操作统一模式（2026-10-16 设计）：
- * 互斥键 busyKey 防重入 → 快照 → 乐观更新 → 成功用响应 `action`（add/remove=最终态）
+ * 互斥键防重入（同一操作在途时防双击；不同操作可并行，见 [UiState.busyKeys]）→ 快照 →
+ * 乐观更新 → 成功用响应 `action`（add/remove=最终态）
  * 与 `cuont`（新计数）校准 → 失败回滚 + 提示。站点的 JS 在失败时也把计数写成 0，
  * 那是它的 bug，客户端不跟。
  *
@@ -72,8 +73,10 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
         val commentsPage: Int = 1,
         val commentsHasMore: Boolean = false,
         val commentsLoadingMore: Boolean = false,
-        /** 写操作互斥键（like/fav/follow/rate/cashier/buy/comment/clike-{id}） */
-        val busyKey: String? = null,
+        /** 写操作互斥键集合（like/fav/follow/rate/cashier/buy/comment/clike-{id}）：
+         *  同一键在途时防重复提交；**不同键可并行**——点赞/收藏/关注是互不影响的字段，
+         *  一个操作在途不应把全页按钮都禁掉（2026-10-16 驾驶员走查反馈） */
+        val busyKeys: Set<String> = emptySet(),
         /** 一次性提示（消费后置空） */
         val message: String? = null,
         /** 需要登录提示（收藏/评分/评论/购买/关注） */
@@ -212,7 +215,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
         )
     }
 
-    /** 点赞/收藏共用：互斥 → 乐观 → action/cuont 校准 → 失败回滚 */
+    /** 点赞/收藏共用：占用键防重入 → 乐观 → action/cuont 校准 → 失败回滚 */
     private fun toggleAction(
         key: String,
         current: Boolean,
@@ -220,16 +223,15 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
         apply: (Boolean, Int?) -> Unit,
         post: suspend (String) -> AjaxResult,
     ) {
-        if (_state.value.busyKey != null) return
         val nonce = _state.value.detail?.header?.postActionNonce
         if (nonce.isNullOrBlank()) {
             _state.update { it.copy(message = "页面数据未就绪，请稍后重试") }
             return
         }
+        if (!beginBusy(key)) return
         val target = !current
         val optimisticCount = ((count ?: 0) + if (target) 1 else -1).coerceAtLeast(0)
         apply(target, optimisticCount)
-        _state.update { it.copy(busyKey = key) }
         viewModelScope.launch {
             try {
                 when (val r = post(nonce)) {
@@ -237,6 +239,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
                         val active = r.activeState() ?: target
                         val fresh = r.newCount() ?: optimisticCount
                         apply(active, fresh)
+                        app.notifyContentChanged()
                     }
                     is AjaxResult.Fail -> {
                         apply(current, count) // 回滚快照
@@ -255,15 +258,25 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
                 apply(current, count)
                 _state.update { it.copy(message = e.message ?: "操作失败，请重试") }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy(key)
             }
         }
     }
 
+    // ---------- 写操作互斥键 ----------
+
+    /** 占用互斥键；同一键已在途返回 false（防双击），不同键互不影响 */
+    private fun beginBusy(key: String): Boolean {
+        if (key in _state.value.busyKeys) return false
+        _state.update { it.copy(busyKeys = it.busyKeys + key) }
+        return true
+    }
+
+    private fun endBusy(key: String) = _state.update { it.copy(busyKeys = it.busyKeys - key) }
+
     // ---------- 关注作者（头部与作者卡同步） ----------
 
     fun toggleFollow() {
-        if (_state.value.busyKey != null) return
         val st = _state.value
         if (!st.loggedIn) {
             _state.update { it.copy(needsLogin = true) }
@@ -276,14 +289,17 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             return
         }
         val prev = st.following
-        _state.update { it.copy(following = !prev, busyKey = "follow") }
+        if (!beginBusy("follow")) return
+        _state.update { it.copy(following = !prev) }
         viewModelScope.launch {
             try {
                 when (val r = app.client.author.follow(authorId, nonce)) {
-                    is AjaxResult.Ok ->
+                    is AjaxResult.Ok -> {
                         _state.update {
                             it.copy(message = r.msg, following = r.activeState() ?: !prev)
                         }
+                        app.notifyContentChanged()
+                    }
                     is AjaxResult.Fail ->
                         _state.update { it.copy(following = prev, message = r.msg, needsLogin = it.needsLogin || r.msg.contains("登录")) }
                     else ->
@@ -292,7 +308,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             } catch (e: Exception) {
                 _state.update { it.copy(following = prev, message = e.message ?: "操作失败，请重试") }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy("follow")
             }
         }
     }
@@ -300,7 +316,6 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
     // ---------- 评分 ----------
 
     fun rate(stars: Int) {
-        if (_state.value.busyKey != null) return
         val st = _state.value
         if (!st.loggedIn) {
             _state.update { it.copy(needsLogin = true) }
@@ -316,7 +331,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             _state.update { it.copy(message = "评分暂不可用，请稍后重试") }
             return
         }
-        _state.update { it.copy(busyKey = "rate") }
+        if (!beginBusy("rate")) return
         viewModelScope.launch {
             try {
                 when (val r = app.client.post.rate(postId, stars, nonce)) {
@@ -355,7 +370,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             } catch (e: Exception) {
                 _state.update { it.copy(message = e.message ?: "评分失败，请重试") }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy("rate")
             }
         }
     }
@@ -364,12 +379,11 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
 
     /** 打开收银台：积分支付 → 确认框；真钱支付 → 请到网站操作 */
     fun openCashier() {
-        if (_state.value.busyKey != null) return
         if (!_state.value.loggedIn) {
             _state.update { it.copy(needsLogin = true) }
             return
         }
-        _state.update { it.copy(busyKey = "cashier") }
+        if (!beginBusy("cashier")) return
         viewModelScope.launch {
             try {
                 val info = app.client.post.cashier(postId)
@@ -381,7 +395,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             } catch (e: Exception) {
                 _state.update { it.copy(message = e.message ?: "收银台加载失败，请重试") }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy("cashier")
             }
         }
     }
@@ -389,13 +403,13 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
     /** 确认积分支付（真实扣积分；成功整页重取 → 付费区变已购） */
     fun confirmBuy() {
         val info = _state.value.cashier ?: return
-        if (_state.value.busyKey != null) return
-        _state.update { it.copy(busyKey = "buy") }
+        if (!beginBusy("buy")) return
         viewModelScope.launch {
             try {
                 when (val r = app.client.post.buyPoints(info)) {
                     is AjaxResult.Ok -> {
                         _state.update { it.copy(cashier = null, message = r.msg.ifBlank { "购买成功" }) }
+                        app.notifyContentChanged() // 积分已扣，我的页资产卡需刷新
                         reloadDetail()
                     }
                     is AjaxResult.Fail ->
@@ -408,7 +422,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             } catch (e: Exception) {
                 _state.update { it.copy(cashier = null, message = e.message ?: "购买失败，请重试") }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy("buy")
             }
         }
     }
@@ -496,9 +510,8 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
     /** 滑块完成 → 带 captcha 提交；服务端再要滑块则保留待提交（UI 重弹） */
     fun submitCommentWithCaptcha(solution: SliderCaptcha.Solution?) {
         val pending = _state.value.pendingComment ?: return
-        if (_state.value.busyKey != null) return
         val nonce = _state.value.detail?.header?.commentFormNonce ?: return
-        _state.update { it.copy(busyKey = "comment") }
+        if (!beginBusy("comment")) return
         viewModelScope.launch {
             try {
                 when (val r = app.client.post.submitComment(postId, pending.content, pending.parent, nonce, solution)) {
@@ -517,6 +530,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
                                 commentSuccessTick = it.commentSuccessTick + 1,
                             )
                         }
+                        app.notifyContentChanged() // 评论数变化，我的页统计需刷新
                         refreshComments()
                     }
                     is AjaxResult.NeedsCaptcha ->
@@ -529,7 +543,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             } catch (e: Exception) {
                 _state.update { it.copy(pendingComment = null, message = e.message ?: "评论失败，请重试") }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy("comment")
             }
         }
     }
@@ -554,14 +568,13 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
 
     /** 评论点赞（匿名可点，与文章点赞一致） */
     fun toggleCommentLike(comment: PostComment) {
-        val busy = _state.value.busyKey
-        if (busy != null) return
         val nonce = _state.value.detail?.header?.postActionNonce
         if (nonce.isNullOrBlank()) return
+        val key = "clike-${comment.id}"
+        if (!beginBusy(key)) return
         val target = !comment.liked
         val optimistic = ((comment.likeCount ?: 0) + if (target) 1 else -1).coerceAtLeast(0)
         updateComment(comment.id) { it.copy(liked = target, likeCount = optimistic) }
-        _state.update { it.copy(busyKey = "clike-${comment.id}") }
         viewModelScope.launch {
             try {
                 when (val r = app.client.post.commentLike(comment.id, nonce)) {
@@ -577,7 +590,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
             } catch (_: Exception) {
                 updateComment(comment.id) { it.copy(liked = comment.liked, likeCount = comment.likeCount) }
             } finally {
-                _state.update { it.copy(busyKey = null) }
+                endBusy(key)
             }
         }
     }

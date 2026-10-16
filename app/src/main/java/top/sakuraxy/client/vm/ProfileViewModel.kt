@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.core.AjaxResult
@@ -63,38 +64,74 @@ class ProfileViewModel(private val app: SakuApp) : ViewModel() {
 
     private var loading = false
 
+    /** 下拉刷新进行中（页面可见时用户主动刷新，给刷新手势显示转圈） */
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
             // 跳过首次发射（初始加载由页面 ON_RESUME 触发），之后登录态变化即刷新
-            app.client.session.revision.drop(1).collect { load() }
+            app.client.session.revision.drop(1).collect { reload(force = false, reportFailure = false) }
+        }
+        viewModelScope.launch {
+            // 详情页等处的写操作（收藏/关注/点赞/评论/购买）成功后自增 → 静默重取总览；
+            // 返回「我的」页时统计数字/资产已是新值（2026-10-16 驾驶员走查反馈）
+            app.contentRevision.drop(1).collect { reload(force = true, reportFailure = false) }
         }
     }
 
-    /** 加载/刷新总览（并发调用时只保留一次在途请求） */
-    fun load() = reload(force = false)
+    /** 回到本页时的静默刷新（失败会给出提示，避免数字悄悄停在旧值上） */
+    fun load() = reload(force = false, reportFailure = true)
 
-    private fun reload(force: Boolean) {
+    /** 用户主动下拉刷新：显示转圈，失败提示 */
+    fun refresh() {
+        if (_refreshing.value) return
+        viewModelScope.launch {
+            _refreshing.value = true
+            try {
+                fetchAndApply(reportFailure = true)
+            } finally {
+                _refreshing.value = false
+            }
+        }
+    }
+
+    private fun reload(force: Boolean, reportFailure: Boolean) {
         if (loading && !force) return
         loading = true
         viewModelScope.launch {
             try {
-                if (!app.client.session.isLoggedIn()) {
-                    _state.value = UiState.LoggedOut
-                    return@launch
-                }
-                if (_state.value !is UiState.LoggedIn) _state.value = UiState.Loading
-                val overview = app.client.users.overview()
-                val user = app.client.users.currentUser()
-                _state.value = if (user == null) {
-                    // cookie 已失效：按未登录处理（cookie 留待下次登录覆盖）
-                    UiState.LoggedOut
-                } else {
-                    UiState.LoggedIn(userId = user.id, email = user.email, overview = overview)
-                }
-            } catch (e: Exception) {
-                _state.value = UiState.Error(e.message ?: "加载失败，请重试")
+                fetchAndApply(reportFailure)
             } finally {
                 loading = false
+            }
+        }
+    }
+
+    private suspend fun fetchAndApply(reportFailure: Boolean) {
+        try {
+            if (!app.client.session.isLoggedIn()) {
+                _state.value = UiState.LoggedOut
+                return
+            }
+            if (_state.value !is UiState.LoggedIn) _state.value = UiState.Loading
+            val overview = app.client.users.overview()
+            val user = app.client.users.currentUser()
+            _state.value = if (user == null) {
+                // cookie 已失效：按未登录处理（cookie 留待下次登录覆盖）
+                UiState.LoggedOut
+            } else {
+                UiState.LoggedIn(userId = user.id, email = user.email, overview = overview)
+            }
+        } catch (e: Exception) {
+            // 已有数据时保留现状（不让一次抖动把已显示的页面顶成错误页）；
+            // 但刷新失败必须让用户知道，不静默停在旧数字上
+            _state.update { prev ->
+                if (prev is UiState.LoggedIn || prev is UiState.LoggedOut) prev
+                else UiState.Error(e.message ?: "加载失败，请重试")
+            }
+            if (reportFailure && _state.value is UiState.LoggedIn) {
+                _message.value = "刷新失败：${e.message ?: "网络异常"}"
             }
         }
     }
@@ -108,7 +145,7 @@ class ProfileViewModel(private val app: SakuApp) : ViewModel() {
                 when (val result = app.client.users.checkin()) {
                     is AjaxResult.Ok -> {
                         _message.value = result.msg.ifBlank { "签到成功" }
-                        reload(force = true)
+                        reload(force = true, reportFailure = false)
                     }
                     is AjaxResult.Fail -> _message.value = result.msg
                     is AjaxResult.NeedsCaptcha -> _message.value = result.msg
