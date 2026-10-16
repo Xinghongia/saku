@@ -3,7 +3,8 @@ package top.sakuraxy.client.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -24,10 +25,9 @@ private val AmoledBlack = Color(0xFF000000)
  * - 配色来源优先级：动态取色（Android 12+，默认开启，跟随壁纸）
  *   → 预设主题（[PresetThemes]，五套自研配色）
  * - 全部 surface 容器带主题色倾向，无中性灰（底栏/卡片/菜单不发灰）
+ * - [MaterialExpressiveTheme] + [MotionScheme.expressive]（弹性动效）——
+ *   依赖 material3 1.5.0 系（BOM 固定的 1.4.0 里这套 API 还是 internal）
  * - 状态栏/导航栏图标颜色跟随深浅模式（避免强制深色时图标看不清）
- *
- * 备注：material3 1.4.0（当前 BOM）的 MaterialExpressiveTheme/MotionScheme 仍是
- * internal API，暂不可用；组件动效沿用 Material 3 默认。
  */
 @Composable
 fun SakuTheme(
@@ -78,8 +78,9 @@ fun SakuTheme(
         }
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
+        motionScheme = MotionScheme.expressive(),
         content = content,
     )
 }

@@ -147,14 +147,18 @@ fun SettingsGroup(
     }
 }
 
-/** 行首图标：纯图标不带背景（20dp，用主题主色） */
+/** 行首图标：纯图标不带背景（22dp，用主题强调色；颜色随主题切换带过渡） */
 @Composable
 fun GroupIcon(
     icon: ImageVector,
     tone: GroupTone = GroupTone.SECONDARY,
 ) {
     val color = toneColor(tone)
-    val animatedColor by animateColorAsState(color, label = "groupIconColor")
+    val animatedColor by animateColorAsState(
+        targetValue = color,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "groupIconColor",
+    )
     Icon(
         icon,
         contentDescription = null,
@@ -213,12 +217,20 @@ private fun groupShape(index: Int, count: Int): Shape {
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 
-/** 行形状：按下时两端展开为大圆角（弹性过渡） */
+/** 行形状：按下时两端展开为大圆角（弹性空间动效） */
 @Composable
 private fun animatedRowShape(index: Int, count: Int, pressed: Boolean): Shape {
     val targetTop = if (pressed || index == 0) GroupCorner else InnerCorner
     val targetBottom = if (pressed || index == count - 1) GroupCorner else InnerCorner
-    val top by animateDpAsState(targetTop, label = "rowTopCorner")
-    val bottom by animateDpAsState(targetBottom, label = "rowBottomCorner")
+    val top by animateDpAsState(
+        targetValue = targetTop,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "rowTopCorner",
+    )
+    val bottom by animateDpAsState(
+        targetValue = targetBottom,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "rowBottomCorner",
+    )
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
