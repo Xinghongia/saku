@@ -61,6 +61,8 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
         val golinkButtons: List<Golink.Button> = emptyList(),
         /** 页面解析（作者/计数/互动/评分/付费区/作者卡/面包屑/标签） */
         val detail: PostDetail? = null,
+        /** 页面解析是否失败（详情页骨架屏据此让位给正文；失败原因走 message 提示） */
+        val detailFailed: Boolean = false,
         /** 当前用户是否已关注作者（头部与作者卡两处按钮共用） */
         val following: Boolean = false,
         val loggedIn: Boolean = false,
@@ -118,7 +120,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
 
     fun load() {
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true, error = null, detailFailed = false) }
             try {
                 val post = app.client.rest.post(postId)
                 val content = post.content?.rendered.orEmpty()
@@ -140,13 +142,14 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
         }
     }
 
-    /** 页面信息（互动/付费/评论首屏）；失败不影响正文展示 */
+    /** 页面信息（互动/付费/评论首屏）；失败不影响正文展示（骨架屏让位，Toast 提示原因） */
     private suspend fun loadDetail(link: String) {
         runCatching { app.client.site.postDetail(link) }
             .onSuccess { detail ->
                 _state.update {
                     it.copy(
                         detail = detail,
+                        detailFailed = false,
                         following = detail.header.following,
                         comments = detail.commentPage?.comments ?: emptyList(),
                         commentsPage = detail.commentPage?.currentPage ?: 1,
@@ -155,7 +158,11 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
                 }
                 autoDecodeQr(detail)
             }
-            .onFailure { _state.update { s -> s.copy(message = "页面信息加载失败：${it.message ?: "网络异常"}") } }
+            .onFailure {
+                _state.update { s ->
+                    s.copy(detailFailed = true, message = "页面信息加载失败：${it.message ?: "网络异常"}")
+                }
+            }
     }
 
     /** 登录用户 id（失败不致命：仅影响自己文章上关注/私信按钮的隐藏） */

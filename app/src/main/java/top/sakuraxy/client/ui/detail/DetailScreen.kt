@@ -141,12 +141,8 @@ fun DetailScreen(
         },
     ) { padding ->
         when {
-            state.loading -> Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                Alignment.Center,
-            ) { CircularProgressIndicator() }
+            // 首帧即整页骨架（正文来自快速接口、头部来自慢速整页解析，避免互相挤位）
+            state.loading -> DetailSkeletonPage(Modifier.padding(padding))
 
             state.error != null ->
                 ErrorRetry(
@@ -174,7 +170,8 @@ fun DetailScreen(
                 }
 
                 val detail = state.detail
-                // 作者行（头像/名字/徽章/等级 + 关注/私信）+ 计数行 + 面包屑
+                // 作者行（头像/名字/徽章/等级 + 关注/私信）+ 计数行 + 面包屑；
+                // 页面解析未返回前用骨架占住头部位置（正文始终在其下方，不被挤动）
                 if (detail != null) {
                     val isSelf = state.myUserId != null && state.myUserId == detail.header.authorId
                     item {
@@ -201,6 +198,8 @@ fun DetailScreen(
                             }
                         }
                     }
+                } else if (!state.detailFailed) {
+                    item { DetailHeaderSkeleton() }
                 }
 
                 // 正文
