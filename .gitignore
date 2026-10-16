@@ -14,6 +14,11 @@ research/
 # 样本生成器/本机探测脚本（含真实站点样本与映射字符串，仅本机使用；fixtures 产物照常入库）
 core/src/test/kotlin/top/sakuraxy/client/core/*Scratch.kt
 
+# 发布签名与出包产物（仅本机，不入库）
+keystore.properties
+*.jks
+dist/
+
 # 系统
 .DS_Store
 Thumbs.db
