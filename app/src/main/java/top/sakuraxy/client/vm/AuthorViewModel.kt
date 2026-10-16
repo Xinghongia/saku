@@ -21,6 +21,7 @@ import top.sakuraxy.client.core.SiteParser
 /**
  * 作者主页：头部 + 四个标签（文章/评论/收藏/粉丝）+ 关注。
  * tab 切换与分页直接请求整页（站点服务端渲染激活标签，客户端不做 ajax 片段拼装）。
+ * 文章/收藏两个标签带分页（PageWindow 窗口模型，与列表页一致）。
  */
 class AuthorViewModel(
     private val app: SakuApp,
@@ -39,11 +40,19 @@ class AuthorViewModel(
         val followList: AuthorFollowList? = null,
         /** 粉丝 tab 内当前查看的子列表：followed=粉丝 / follow=关注 */
         val followSub: String = "followed",
-        val page: Int = 1,
-        val maxPage: Int? = null,
+        val window: PageWindow = PageWindow(),
         val followBusy: Boolean = false,
+        /** 一次性滚动目标（列表项下标）；界面滚动后调 consumeScrollTarget 清空 */
+        val scrollTarget: Int? = null,
     ) {
-        val canLoadMore: Boolean get() = maxPage != null && page < (maxPage ?: 1) && tab in setOf("post", "favorite")
+        val page: Int get() = window.loadedMax
+        val maxPage: Int? get() = window.maxPage
+        val pagedTab: Boolean get() = tab in PAGED_TABS
+        val canLoadMore: Boolean get() = pagedTab && maxPage != null && page < (maxPage ?: 1)
+
+        companion object {
+            val PAGED_TABS = setOf("post", "favorite")
+        }
     }
 
     private val _state = MutableStateFlow(UiState(tab = initialTab ?: "post"))
@@ -53,45 +62,106 @@ class AuthorViewModel(
     val message: StateFlow<String?> = _message.asStateFlow()
 
     init {
-        load(reset = true)
+        load(1, Mode.Reset)
     }
 
     fun setTab(tab: String) {
         if (tab == _state.value.tab) return
         _state.update { it.copy(tab = tab) }
-        load(reset = true)
+        load(1, Mode.Reset)
     }
 
+    /** 列表末尾「加载更多」：追加下一页（不动滚动位置） */
     fun loadMore() {
         val current = _state.value
         if (current.loading || current.loadingMore || !current.canLoadMore) return
-        load(reset = false)
+        load(current.window.loadedMax + 1, Mode.Append)
     }
 
-    fun retry() = load(reset = true)
+    fun retry() = load(1, Mode.Reset)
 
-    private fun load(reset: Boolean) {
+    /** 上一页 / 下一页（visiblePage = 由列表滚动位置换算的当前页） */
+    fun prevPage(visiblePage: Int) = seek(visiblePage - 1)
+
+    fun nextPage(visiblePage: Int) = seek(visiblePage + 1)
+
+    /** 跳页（页码格子选择） */
+    fun jumpTo(page: Int) = seek(page)
+
+    private fun seek(page: Int) {
+        val s = _state.value
+        val max = s.window.maxPage ?: return
+        if (!s.pagedTab || page !in 1..max || s.loading || s.loadingMore) return
+        when (val action = s.window.actionFor(page)) {
+            is PageWindow.Action.ScrollTo -> _state.update { it.copy(scrollTarget = action.index) }
+            PageWindow.Action.Append -> load(page, Mode.Append, scrollToStart = true)
+            PageWindow.Action.Prepend -> load(page, Mode.Prepend)
+            PageWindow.Action.Reset -> load(page, Mode.Reset)
+        }
+    }
+
+    fun consumeScrollTarget() = _state.update { it.copy(scrollTarget = null) }
+
+    private enum class Mode { Reset, Append, Prepend }
+
+    private fun load(page: Int, mode: Mode, scrollToStart: Boolean = false) {
         viewModelScope.launch {
-            val targetPage = if (reset) 1 else _state.value.page + 1
             _state.update {
-                if (reset) it.copy(loading = true, error = null) else it.copy(loadingMore = true)
+                if (mode == Mode.Reset) it.copy(loading = true, error = null) else it.copy(loadingMore = true)
             }
             try {
                 val tab = _state.value.tab
-                val result = app.client.author.page(authorId, tab, targetPage)
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        loadingMore = false,
-                        info = result.info,
-                        cards = if (tab in setOf("post", "favorite")) {
-                            if (reset) result.cards else it.cards + result.cards
-                        } else it.cards,
-                        comments = result.comments,
-                        followList = result.followList ?: it.followList,
-                        page = targetPage,
-                        maxPage = result.listPage?.maxPage,
-                    )
+                val result = app.client.author.page(authorId, tab, page)
+                val actual = result.listPage?.currentPage ?: page
+                _state.update { s ->
+                    if (tab !in UiState.PAGED_TABS) {
+                        s.copy(
+                            loading = false,
+                            loadingMore = false,
+                            info = result.info,
+                            cards = s.cards,
+                            comments = result.comments,
+                            followList = result.followList ?: s.followList,
+                        )
+                    } else {
+                        when (mode) {
+                            Mode.Reset -> s.copy(
+                                loading = false,
+                                loadingMore = false,
+                                info = result.info,
+                                cards = result.cards,
+                                comments = result.comments,
+                                followList = result.followList ?: s.followList,
+                                window = s.window.afterReset(actual, result.listPage?.maxPage),
+                                scrollTarget = 0,
+                            )
+
+                            Mode.Append -> {
+                                val start = s.cards.size
+                                s.copy(
+                                    loading = false,
+                                    loadingMore = false,
+                                    info = result.info,
+                                    cards = s.cards + result.cards,
+                                    comments = result.comments,
+                                    followList = result.followList ?: s.followList,
+                                    window = s.window.afterAppend(actual, start, result.listPage?.maxPage),
+                                    scrollTarget = if (scrollToStart) start else s.scrollTarget,
+                                )
+                            }
+
+                            Mode.Prepend -> s.copy(
+                                loading = false,
+                                loadingMore = false,
+                                info = result.info,
+                                cards = result.cards + s.cards,
+                                comments = result.comments,
+                                followList = result.followList ?: s.followList,
+                                window = s.window.afterPrepend(actual, result.cards.size),
+                                scrollTarget = 0,
+                            )
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 _state.update {

@@ -12,32 +12,41 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -270,7 +279,7 @@ fun MiniChip(
     }
 }
 
-/** 列表底部：加载中 / 加载更多 / 已到底 / 重试 */
+/** 列表底部：加载中 / 加载更多 / 已到底 / 重试（跳页按钮打开页码格子选页） */
 @Composable
 fun ListFooter(
     loading: Boolean,
@@ -285,7 +294,7 @@ fun ListFooter(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when {
@@ -295,59 +304,148 @@ fun ListFooter(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = onLoadMore) { Text("加载更多") }
                     if (onJump != null) {
-                        TextButton(onClick = onJump) {
-                            Text(if (maxPage != null) "第 $page / $maxPage 页 · 跳页" else "跳页")
-                        }
+                        TextButton(onClick = onJump) { Text("跳页") }
                     }
                 }
             }
 
             page > 0 && maxPage != null -> {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "第 $page / $maxPage 页 · 已经到底了",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (onJump != null) {
-                        TextButton(onClick = onJump) { Text("跳页") }
-                    }
-                }
+                Text(
+                    "已经到底了（共 $maxPage 页）",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
 }
 
-/** 跳页对话框（对应站点分页控件的「跳转」输入框） */
+/**
+ * 常驻翻页条（列表页底部固定）：「‹ 第 N / M 页 ›」。
+ * 翻页与滚动位置联动；点中间弹出页码格子直接选页。
+ */
 @Composable
-fun PageJumpDialog(
-    maxPage: Int?,
-    onDismiss: () -> Unit,
-    onJump: (Int) -> Unit,
+fun PagerBar(
+    currentPage: Int,
+    maxPage: Int,
+    loading: Boolean,
+    modifier: Modifier = Modifier,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    onOpenPicker: () -> Unit,
 ) {
-    var text by remember { mutableStateOf("") }
-    AlertDialog(
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 3.dp,
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(46.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            IconButton(onClick = onPrev, enabled = currentPage > 1 && !loading) {
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                    contentDescription = "上一页",
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+            TextButton(onClick = onOpenPicker, enabled = !loading) {
+                if (loading) {
+                    CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(
+                    "第 $currentPage / $maxPage 页",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                )
+                Icon(
+                    Icons.Outlined.KeyboardArrowUp,
+                    contentDescription = "选择页码",
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            IconButton(onClick = onNext, enabled = currentPage < maxPage && !loading) {
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = "下一页",
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        }
+    }
+}
+
+/** 页码格子选页（底部弹层）：点数字直接跳页，当前页高亮，打开时滚到当前页附近 */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PagePickerSheet(
+    currentPage: Int,
+    maxPage: Int,
+    onDismiss: () -> Unit,
+    onPick: (Int) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(if (maxPage != null) "跳转到第几页（1-$maxPage）" else "跳转到第几页") },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { value: String -> text = value.filter { it.isDigit() }.take(6) },
-                singleLine = true,
-                placeholder = { Text("页码") },
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+        ) {
+            Text(
+                "跳转到第几页（共 $maxPage 页）",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
             )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val page = text.toIntOrNull()
-                    if (page != null && page >= 1 && (maxPage == null || page <= maxPage)) {
-                        onJump(page)
+            Spacer(Modifier.height(12.dp))
+            val columns = 6
+            val gridState = rememberLazyGridState(
+                // 打开时定位到当前页所在行的前一行，便于就近选页
+                initialFirstVisibleItemIndex = (((currentPage - 1) / columns) - 1).coerceAtLeast(0) * columns,
+            )
+            LazyVerticalGrid(
+                state = gridState,
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier.heightIn(max = 380.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(maxPage) { index ->
+                    val page = index + 1
+                    val selected = page == currentPage
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHigh
+                        },
+                        modifier = Modifier
+                            .height(44.dp)
+                            .clickable { onPick(page) },
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                "$page",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (selected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            )
+                        }
                     }
-                    onDismiss()
-                },
-            ) { Text("跳转") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
-    )
+                }
+            }
+        }
+    }
 }

@@ -11,8 +11,8 @@ android {
         applicationId = "top.sakuraxy.client"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.7.0"
+        versionCode = 8
+        versionName = "0.8.0"
     }
 
     buildFeatures {
@@ -56,4 +56,5 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.coil.svg)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    testImplementation(libs.junit)
 }

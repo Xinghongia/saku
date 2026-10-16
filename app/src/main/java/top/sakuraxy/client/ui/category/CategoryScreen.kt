@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,7 +15,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,14 +31,15 @@ import top.sakuraxy.client.ui.components.CenterLoading
 import top.sakuraxy.client.ui.components.EmptyHint
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.ListFooter
-import top.sakuraxy.client.ui.components.PageJumpDialog
+import top.sakuraxy.client.ui.components.PagePickerSheet
+import top.sakuraxy.client.ui.components.PagerBar
 import top.sakuraxy.client.ui.components.PostCardItem
 import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.ui.components.SortMenuButton
 import top.sakuraxy.client.ui.home.listSortOptions
 import top.sakuraxy.client.vm.SiteListViewModel
 
-/** 分类列表页：分类内文章（卡片 + 排序下拉 + 分页），顶栏显示分类名与篇数 */
+/** 分类列表页：分类内文章（卡片 + 排序下拉 + 常驻翻页条），顶栏显示分类名与篇数 */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
@@ -50,7 +54,22 @@ fun CategoryScreen(
         SiteListViewModel(app, categoryUrl)
     }
     val state by vm.state.collectAsState()
-    var jumpDialog by remember { mutableStateOf(false) }
+    var picker by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val visiblePage by remember(state.window) {
+        derivedStateOf { state.window.pageAt(listState.firstVisibleItemIndex) }
+    }
+    LaunchedEffect(state.scrollTarget) {
+        state.scrollTarget?.let { target ->
+            if (kotlin.math.abs(target - listState.firstVisibleItemIndex) <= 30) {
+                listState.animateScrollToItem(target)
+            } else {
+                listState.scrollToItem(target)
+            }
+            vm.consumeScrollTarget()
+        }
+    }
+    val maxPage = state.maxPage
 
     Scaffold(
         topBar = {
@@ -71,6 +90,18 @@ fun CategoryScreen(
                 },
             )
         },
+        bottomBar = {
+            if (maxPage != null && maxPage > 1 && state.cards.isNotEmpty()) {
+                PagerBar(
+                    currentPage = visiblePage,
+                    maxPage = maxPage,
+                    loading = state.loading || state.loadingMore,
+                    onPrev = { vm.prevPage(visiblePage) },
+                    onNext = { vm.nextPage(visiblePage) },
+                    onOpenPicker = { picker = true },
+                )
+            }
+        },
     ) { padding ->
         Column(
             Modifier
@@ -82,6 +113,7 @@ fun CategoryScreen(
                 state.cards.isEmpty() && state.loading -> CenterLoading()
                 state.cards.isEmpty() -> EmptyHint("这个分类下还没有内容")
                 else -> LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -98,10 +130,10 @@ fun CategoryScreen(
                             canLoadMore = state.canLoadMore,
                             error = state.error,
                             page = state.page,
-                            maxPage = state.maxPage,
+                            maxPage = maxPage,
                             onLoadMore = vm::loadMore,
                             onRetry = vm::retry,
-                            onJump = { jumpDialog = true },
+                            onJump = { picker = true },
                         )
                     }
                 }
@@ -109,11 +141,15 @@ fun CategoryScreen(
         }
     }
 
-    if (jumpDialog) {
-        PageJumpDialog(
-            maxPage = state.maxPage,
-            onDismiss = { jumpDialog = false },
-            onJump = vm::jumpTo,
+    if (picker && maxPage != null) {
+        PagePickerSheet(
+            currentPage = visiblePage,
+            maxPage = maxPage,
+            onDismiss = { picker = false },
+            onPick = { page ->
+                picker = false
+                vm.jumpTo(page)
+            },
         )
     }
 }

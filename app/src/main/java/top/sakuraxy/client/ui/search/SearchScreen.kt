@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,8 +27,13 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -40,11 +46,13 @@ import top.sakuraxy.client.ui.components.CenterLoading
 import top.sakuraxy.client.ui.components.EmptyHint
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.ListFooter
+import top.sakuraxy.client.ui.components.PagePickerSheet
+import top.sakuraxy.client.ui.components.PagerBar
 import top.sakuraxy.client.ui.components.PostCardItem
 import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.vm.SearchViewModel
 
-/** 搜索：站点搜索结果（卡片与列表页一致） */
+/** 搜索：站点搜索结果（卡片与列表页一致；常驻翻页条与列表页同一套分页模型） */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -55,9 +63,37 @@ fun SearchScreen(
     val vm: SearchViewModel = viewModel { SearchViewModel(app) }
     val state by vm.state.collectAsState()
     val keyboard = LocalSoftwareKeyboardController.current
+    var picker by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val visiblePage by remember(state.window) {
+        derivedStateOf { state.window.pageAt(listState.firstVisibleItemIndex) }
+    }
+    LaunchedEffect(state.scrollTarget) {
+        state.scrollTarget?.let { target ->
+            if (kotlin.math.abs(target - listState.firstVisibleItemIndex) <= 30) {
+                listState.animateScrollToItem(target)
+            } else {
+                listState.scrollToItem(target)
+            }
+            vm.consumeScrollTarget()
+        }
+    }
+    val maxPage = state.maxPage
 
     Scaffold(
         topBar = { SakuTopAppBar(title = "搜索") },
+        bottomBar = {
+            if (state.searched && maxPage != null && maxPage > 1 && state.cards.isNotEmpty()) {
+                PagerBar(
+                    currentPage = visiblePage,
+                    maxPage = maxPage,
+                    loading = state.loading || state.loadingMore,
+                    onPrev = { vm.prevPage(visiblePage) },
+                    onNext = { vm.nextPage(visiblePage) },
+                    onOpenPicker = { picker = true },
+                )
+            }
+        },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         Column(
@@ -106,6 +142,7 @@ fun SearchScreen(
                 state.searched && state.cards.isEmpty() -> EmptyHint("没有找到相关内容")
                 !state.searched -> EmptyHint("输入关键词搜索资源")
                 else -> LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -122,13 +159,26 @@ fun SearchScreen(
                             canLoadMore = state.canLoadMore,
                             error = null,
                             page = state.page,
-                            maxPage = state.maxPage,
+                            maxPage = maxPage,
                             onLoadMore = vm::loadMore,
                             onRetry = vm::search,
+                            onJump = { picker = true },
                         )
                     }
                 }
             }
         }
+    }
+
+    if (picker && maxPage != null) {
+        PagePickerSheet(
+            currentPage = visiblePage,
+            maxPage = maxPage,
+            onDismiss = { picker = false },
+            onPick = { page ->
+                picker = false
+                vm.jumpTo(page)
+            },
+        )
     }
 }

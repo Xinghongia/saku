@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,7 +16,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +32,8 @@ import top.sakuraxy.client.ui.components.CenterLoading
 import top.sakuraxy.client.ui.components.EmptyHint
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.ListFooter
-import top.sakuraxy.client.ui.components.PageJumpDialog
+import top.sakuraxy.client.ui.components.PagePickerSheet
+import top.sakuraxy.client.ui.components.PagerBar
 import top.sakuraxy.client.ui.components.PostCardItem
 import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.ui.components.SortMenuButton
@@ -39,7 +43,7 @@ import top.sakuraxy.client.vm.SiteListViewModel
 internal val listSortOptions =
     listOf(null to "推荐") + SiteParser.knownSortOptions.map { it.key to it.label }
 
-/** 首页：站点最新/热门资源列表（卡片 + 排序下拉 + 分页 + 登录后显示发布入口） */
+/** 首页：站点最新/热门资源列表（卡片 + 排序下拉 + 常驻翻页条 + 登录后显示发布入口） */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -50,10 +54,27 @@ fun HomeScreen(
 ) {
     val vm: SiteListViewModel = viewModel { SiteListViewModel(app) }
     val state by vm.state.collectAsState()
-    var jumpDialog by remember { mutableStateOf(false) }
+    var picker by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    // 当前可见页 = 列表第一个可见项落在哪一页（翻页条随滚动联动）
+    val visiblePage by remember(state.window) {
+        derivedStateOf { state.window.pageAt(listState.firstVisibleItemIndex) }
+    }
+    // 一次性滚动定位（翻页/加载新页后列表滚到该页首项）
+    LaunchedEffect(state.scrollTarget) {
+        state.scrollTarget?.let { target ->
+            if (kotlin.math.abs(target - listState.firstVisibleItemIndex) <= 30) {
+                listState.animateScrollToItem(target)
+            } else {
+                listState.scrollToItem(target)
+            }
+            vm.consumeScrollTarget()
+        }
+    }
     // 登录态变化（session.revision 自增）时重算「+」入口显隐
     val sessionRevision by app.client.session.revision.collectAsState()
     val loggedIn = remember(sessionRevision) { app.client.session.isLoggedIn() }
+    val maxPage = state.maxPage
 
     Scaffold(
         topBar = {
@@ -75,6 +96,18 @@ fun HomeScreen(
                 },
             )
         },
+        bottomBar = {
+            if (maxPage != null && maxPage > 1 && state.cards.isNotEmpty()) {
+                PagerBar(
+                    currentPage = visiblePage,
+                    maxPage = maxPage,
+                    loading = state.loading || state.loadingMore,
+                    onPrev = { vm.prevPage(visiblePage) },
+                    onNext = { vm.nextPage(visiblePage) },
+                    onOpenPicker = { picker = true },
+                )
+            }
+        },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         Column(
@@ -86,6 +119,7 @@ fun HomeScreen(
                 state.cards.isEmpty() && state.loading -> CenterLoading()
                 state.cards.isEmpty() -> EmptyHint("这里还没有内容")
                 else -> LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -102,10 +136,10 @@ fun HomeScreen(
                             canLoadMore = state.canLoadMore,
                             error = state.error,
                             page = state.page,
-                            maxPage = state.maxPage,
+                            maxPage = maxPage,
                             onLoadMore = vm::loadMore,
                             onRetry = vm::retry,
-                            onJump = { jumpDialog = true },
+                            onJump = { picker = true },
                         )
                     }
                 }
@@ -113,11 +147,15 @@ fun HomeScreen(
         }
     }
 
-    if (jumpDialog) {
-        PageJumpDialog(
-            maxPage = state.maxPage,
-            onDismiss = { jumpDialog = false },
-            onJump = vm::jumpTo,
+    if (picker && maxPage != null) {
+        PagePickerSheet(
+            currentPage = visiblePage,
+            maxPage = maxPage,
+            onDismiss = { picker = false },
+            onPick = { page ->
+                picker = false
+                vm.jumpTo(page)
+            },
         )
     }
 }

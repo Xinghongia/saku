@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,7 +38,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -57,6 +62,8 @@ import top.sakuraxy.client.ui.components.EmptyHint
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.LevelBadge
 import top.sakuraxy.client.ui.components.ListFooter
+import top.sakuraxy.client.ui.components.PagePickerSheet
+import top.sakuraxy.client.ui.components.PagerBar
 import top.sakuraxy.client.ui.components.PostCardItem
 import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.ui.components.UserAvatar
@@ -78,6 +85,22 @@ fun AuthorScreen(
     val state by viewModel.state.collectAsState()
     val message by viewModel.message.collectAsState()
     val context = LocalContext.current
+    var picker by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    // 当前可见页 = 列表第一个可见项落在哪一页（翻页条随滚动联动；仅文章/收藏两个标签有分页）
+    val visiblePage by remember(state.window) {
+        derivedStateOf { state.window.pageAt(listState.firstVisibleItemIndex) }
+    }
+    LaunchedEffect(state.scrollTarget) {
+        state.scrollTarget?.let { target ->
+            if (kotlin.math.abs(target - listState.firstVisibleItemIndex) <= 30) {
+                listState.animateScrollToItem(target)
+            } else {
+                listState.scrollToItem(target)
+            }
+            viewModel.consumeScrollTarget()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.message.collect { text ->
@@ -98,6 +121,19 @@ fun AuthorScreen(
                     }
                 },
             )
+        },
+        bottomBar = {
+            val maxPage = state.maxPage
+            if (state.pagedTab && maxPage != null && maxPage > 1 && state.cards.isNotEmpty()) {
+                PagerBar(
+                    currentPage = visiblePage,
+                    maxPage = maxPage,
+                    loading = state.loading || state.loadingMore,
+                    onPrev = { viewModel.prevPage(visiblePage) },
+                    onNext = { viewModel.nextPage(visiblePage) },
+                    onOpenPicker = { picker = true },
+                )
+            }
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
@@ -135,10 +171,23 @@ fun AuthorScreen(
                         onToggleFollow = viewModel::toggleFollowUser,
                         onOpenAuthor = { id -> /* 已是作者页，忽略自跳 */ },
                     )
-                    else -> CardList(viewModel, state, onOpenPost, onOpenCategory)
+                    else -> CardList(viewModel, state, listState, onOpenPost, onOpenCategory)
                 }
             }
         }
+    }
+
+    val maxPage = state.maxPage
+    if (picker && maxPage != null) {
+        PagePickerSheet(
+            currentPage = visiblePage,
+            maxPage = maxPage,
+            onDismiss = { picker = false },
+            onPick = { page ->
+                picker = false
+                viewModel.jumpTo(page)
+            },
+        )
     }
 }
 
@@ -236,6 +285,7 @@ private fun FollowButton(following: Boolean, busy: Boolean, onClick: () -> Unit)
 private fun CardList(
     viewModel: AuthorViewModel,
     state: AuthorViewModel.UiState,
+    listState: androidx.compose.foundation.lazy.LazyListState,
     onOpenPost: (Long) -> Unit,
     onOpenCategory: (SiteParser.CardTerm) -> Unit,
 ) {
@@ -245,6 +295,7 @@ private fun CardList(
     }
     LazyColumn(
         Modifier.fillMaxSize(),
+        state = listState,
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
             start = 16.dp, end = 16.dp, bottom = 24.dp,
         ),
