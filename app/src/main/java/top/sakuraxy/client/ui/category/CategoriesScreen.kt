@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,12 +18,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,6 +34,7 @@ import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.core.CategoryTree
 import top.sakuraxy.client.ui.components.CenterLoading
 import top.sakuraxy.client.ui.components.ErrorRetry
+import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.vm.CategoriesViewModel
 
 /** 分类页：站点完整分类树（含二级、三级嵌套），点击进入分类列表 */
@@ -47,7 +48,8 @@ fun CategoriesScreen(
     val state by vm.state.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("分类") }) },
+        topBar = { SakuTopAppBar(title = "分类") },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         when {
             state.loading -> CenterLoading(Modifier.padding(padding))
@@ -56,7 +58,8 @@ fun CategoriesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(vertical = 4.dp),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 items(state.tree, key = { it.term.id }) { node ->
                     CategoryRow(node, depth = 0, onOpenCategory = onOpenCategory)
@@ -73,51 +76,67 @@ private fun CategoryRow(
     onOpenCategory: (String, String) -> Unit,
 ) {
     val url = node.term.link ?: node.term.slug
+    val topLevel = depth == 0
 
-    Column {
-        Row(
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onOpenCategory(url, node.term.name) }
-                .padding(
-                    start = (16 + depth * 20).dp,
-                    end = 16.dp,
-                    top = 12.dp,
-                    bottom = 12.dp,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(start = (depth * 18).dp)
+                .clickable { onOpenCategory(url, node.term.name) },
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+            color = if (topLevel) {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
         ) {
-            Icon(
-                Icons.Outlined.FolderOpen,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = if (depth == 0) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = node.term.name,
-                style = if (depth == 0) MaterialTheme.typography.titleSmall
-                else MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = "${node.term.count} 篇",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.width(6.dp))
-            Icon(
-                Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = "进入分类",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
+            Row(
+                modifier = Modifier.padding(
+                    start = if (topLevel) 14.dp else 10.dp,
+                    end = 12.dp,
+                    top = if (topLevel) 12.dp else 8.dp,
+                    bottom = if (topLevel) 12.dp else 8.dp,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (topLevel) {
+                    Icon(
+                        Icons.Outlined.FolderOpen,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                } else {
+                    Icon(
+                        Icons.Outlined.FolderOpen,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text(
+                    text = node.term.name,
+                    style = if (topLevel) MaterialTheme.typography.titleSmall
+                    else MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = "${node.term.count} 篇",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = "进入分类",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
-        HorizontalDivider(
-            modifier = Modifier.padding(start = (16 + depth * 20).dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-        )
         node.children.forEach { child ->
             CategoryRow(child, depth + 1, onOpenCategory)
         }

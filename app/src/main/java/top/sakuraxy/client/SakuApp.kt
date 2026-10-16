@@ -17,10 +17,14 @@ class SakuApp : Application(), SingletonImageLoader.Factory {
     lateinit var sessionStore: SessionStore
         private set
 
+    lateinit var settingsStore: SettingsStore
+        private set
+
     override fun onCreate() {
         super.onCreate()
         client = SakuClient()
         sessionStore = SessionStore(this)
+        settingsStore = SettingsStore(this)
     }
 
     /** 图片也走同一个 HTTP 客户端：UA 与登录会话保持一致 */

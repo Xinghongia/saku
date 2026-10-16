@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import top.sakuraxy.client.SakuApp
@@ -37,7 +38,16 @@ class SiteListViewModel(
 
     init {
         if (categoryUrl != null) loadHeader()
-        load(reset = true)
+        viewModelScope.launch {
+            // 首页使用设置里的默认排序；分类页保持站点默认（推荐）
+            if (categoryUrl == null) {
+                val preferred = app.settingsStore.flow.first().defaultSort
+                if (preferred.isNotBlank()) {
+                    _state.update { it.copy(sort = preferred) }
+                }
+            }
+            load(reset = true)
+        }
     }
 
     private fun loadHeader() {

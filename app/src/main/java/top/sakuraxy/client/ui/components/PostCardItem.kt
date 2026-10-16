@@ -48,7 +48,7 @@ fun PostCardItem(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         // 封面
@@ -82,8 +82,8 @@ fun PostCardItem(
             card.badge?.let { badge ->
                 MiniChip(
                     text = badge,
-                    container = Color(0xCCD81B60),
-                    content = Color.White,
+                    container = MaterialTheme.colorScheme.primary,
+                    content = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(8.dp),
@@ -91,7 +91,7 @@ fun PostCardItem(
             }
         }
 
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
             Text(
                 text = card.title,
                 style = MaterialTheme.typography.titleSmall,

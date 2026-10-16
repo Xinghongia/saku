@@ -1,6 +1,8 @@
 package top.sakuraxy.client.ui
 
 import android.net.Uri
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -8,9 +10,10 @@ import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +38,7 @@ import top.sakuraxy.client.ui.detail.DetailScreen
 import top.sakuraxy.client.ui.home.HomeScreen
 import top.sakuraxy.client.ui.profile.ProfileScreen
 import top.sakuraxy.client.ui.search.SearchScreen
+import top.sakuraxy.client.ui.settings.SettingsScreen
 
 private object Routes {
     const val HOME = "home"
@@ -44,6 +48,7 @@ private object Routes {
     const val CATEGORY = "category?url={url}&name={name}"
     const val DETAIL = "detail/{postId}"
     const val LOGIN = "login"
+    const val SETTINGS = "settings"
 
     fun category(url: String, name: String) =
         "category?url=${Uri.encode(url)}&name=${Uri.encode(name)}"
@@ -60,7 +65,8 @@ private val tabs = listOf(
     Tab(Routes.PROFILE, "我的", Icons.Outlined.Person),
 )
 
-/** 应用导航：底部四个主页面 + 详情 / 分类列表 / 登录（压在整栈上方） */
+/** 应用导航：底部四个主页面 + 详情 / 分类列表 / 登录 / 设置（压在整栈上方） */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNav(app: SakuApp) {
     val navController = rememberNavController()
@@ -78,9 +84,9 @@ fun AppNav(app: SakuApp) {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
+                ShortNavigationBar {
                     tabs.forEach { tab ->
-                        NavigationBarItem(
+                        ShortNavigationBarItem(
                             selected = currentRoute == tab.route,
                             onClick = { navController.switchTab(tab.route) },
                             icon = { Icon(tab.icon, contentDescription = tab.label) },
@@ -90,13 +96,16 @@ fun AppNav(app: SakuApp) {
                 }
             }
         },
+        // insets 由各页面自己处理（顶栏/列表）；外层只负责底栏占位，避免双层状态栏叠加
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         NavHost(
             navController = navController,
             startDestination = Routes.HOME,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .consumeWindowInsets(padding),
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
@@ -128,7 +137,11 @@ fun AppNav(app: SakuApp) {
             }
 
             composable(Routes.PROFILE) {
-                ProfileScreen(app = app, onOpenLogin = { navController.navigate(Routes.LOGIN) })
+                ProfileScreen(
+                    app = app,
+                    onOpenLogin = { navController.navigate(Routes.LOGIN) },
+                    onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                )
             }
 
             composable(
@@ -171,6 +184,10 @@ fun AppNav(app: SakuApp) {
 
             composable(Routes.LOGIN) {
                 LoginScreen(app = app, onBack = { navController.popBackStack() })
+            }
+
+            composable(Routes.SETTINGS) {
+                SettingsScreen(app = app, onBack = { navController.popBackStack() })
             }
         }
     }

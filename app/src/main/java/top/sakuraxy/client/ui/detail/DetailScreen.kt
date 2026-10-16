@@ -31,7 +31,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +56,7 @@ import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.core.WpComment
 import top.sakuraxy.client.ui.AndroidActions
 import top.sakuraxy.client.ui.components.MiniChip
+import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.ui.components.StatsRow
 import top.sakuraxy.client.vm.DetailViewModel
 
@@ -74,6 +74,7 @@ fun DetailScreen(
     val vm: DetailViewModel = viewModel(key = "detail-$postId") { DetailViewModel(app, postId) }
     val state by vm.state.collectAsState()
     val context = LocalContext.current
+    val linkColor = MaterialTheme.colorScheme.primary
 
     fun handleLink(url: String) {
         val linkedId = SiteParser.postIdFromUrl(url)
@@ -82,14 +83,8 @@ fun DetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.post?.let { Html.toText(it.title.rendered) } ?: "加载中…",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
+            SakuTopAppBar(
+                title = state.post?.let { Html.toText(it.title.rendered) } ?: "加载中…",
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -192,7 +187,7 @@ fun DetailScreen(
                 items(state.blocks) { block ->
                     when (block) {
                         is ContentBlock.Paragraph -> Text(
-                            text = block.text.toAnnotated(context, block.links, ::handleLink),
+                            text = block.text.toAnnotated(context, block.links, linkColor, ::handleLink),
                             style = MaterialTheme.typography.bodyMedium,
                         )
 
@@ -347,10 +342,11 @@ fun DetailScreen(
     }
 }
 
-/** 段落文本 + 可点击链接（站内文章链接跳转进 App，其余打开浏览器） */
+/** 段落文本 + 可点击链接（站内文章链接跳转进 App，其余打开浏览器）；链接色随主题 */
 private fun String.toAnnotated(
     context: android.content.Context,
     links: List<top.sakuraxy.client.core.TextLink>,
+    linkColor: androidx.compose.ui.graphics.Color,
     onLink: (String) -> Unit,
 ) = buildAnnotatedString {
     append(this@toAnnotated)
@@ -360,7 +356,7 @@ private fun String.toAnnotated(
                 url = link.url,
                 styles = TextLinkStyles(
                     style = androidx.compose.ui.text.SpanStyle(
-                        color = androidx.compose.ui.graphics.Color(0xFFB03A73),
+                        color = linkColor,
                         textDecoration = TextDecoration.Underline,
                     ),
                 ),
