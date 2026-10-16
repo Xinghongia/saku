@@ -55,7 +55,18 @@ data class StarRating(
 data class PayDownload(val label: String, val url: String)
 
 /**
- * 文章付费区（#posts-pay，2026-10-16 实测三种形态）。
+ * 付费资源形态（2026-10-16 实测）：
+ * `Download` = 旧的网盘下载按钮型；`Images` = 新型「付费图片」，付费后给的是图片
+ * （如云盘二维码截图），站点靠用户自己扫码获得文件。
+ * 判定依据在 `#posts-pay` 盒内的图标 class / 图库结构（盒外有同名元素，不能全局找）。
+ */
+enum class PayKind { Download, Images }
+
+/** 付费图片（已购后由站点渲染；label 为角标如「1/2」） */
+data class PayImage(val url: String, val label: String?)
+
+/**
+ * 文章付费区（#posts-pay，2026-10-16 实测多种形态）。
  * 注意侧栏另有 pay-widget 同名样式，解析锚定 id=posts-pay。
  */
 sealed interface PayBox {
@@ -73,9 +84,14 @@ sealed interface PayBox {
         val vipHints: List<String>,
         /** 页面上是否有收银台入口（a.cashier-link） */
         val hasCashier: Boolean,
+        val kind: PayKind = PayKind.Download,
+        /** 图片型的付款前预览（站点自己给的模糊封面；购买前绝不显示原图） */
+        val teaserImageUrl: String? = null,
+        /** 图片型提示原文，如「共2张图片 请付费后查看」 */
+        val hintText: String? = null,
     ) : PayBox
 
-    /** 已购买：订单信息 + 资源下载按钮 */
+    /** 已购买：订单信息 + 资源（下载按钮或付费图片，二选一） */
     data class Paid(
         val orderType: Int?,
         val orderNo: String?,
@@ -83,6 +99,9 @@ sealed interface PayBox {
         val payAmount: String?,
         val soldText: String?,
         val downloads: List<PayDownload>,
+        val kind: PayKind = PayKind.Download,
+        /** 图片型资源：站点渲染给已购用户的图片（网盘二维码截图） */
+        val images: List<PayImage> = emptyList(),
     ) : PayBox
 }
 
@@ -289,6 +308,11 @@ object PostDetailParser {
         val box = doc.selectFirst("#posts-pay") ?: return PayBox.Free
         val orderType = ORDER_TYPE_RE.find(box.className())?.groupValues?.get(1)?.toIntOrNull()
         val soldText = box.selectFirst("badge.img-badge")?.text()?.trim()?.ifBlank { null }
+        // 形态判定：盒内 fa-file-image-o 图标（付费图片）或图库结构；旧下载型是 fa-download。
+        // 已购图片型的 #posts-pay 里没有 .pay-tag（那是未购/侧栏的），不能用它判定。
+        val kind = if (box.selectFirst("i.fa-file-image-o") != null ||
+            box.selectFirst(".imgbox-container") != null
+        ) PayKind.Images else PayKind.Download
         return if (box.hasClass("paid-box")) {
             val info = box.selectFirst(".paid-info")
             // 行结构：<div class="flex jsb"><span>订单号</span><span><a…>123</a></span></div>
@@ -306,6 +330,8 @@ object PostDetailParser {
                     val url = a.absUrl("href").ifBlank { null } ?: return@mapNotNull null
                     PayDownload(label = a.text().trim().ifBlank { "下载" }, url = url)
                 },
+                kind = kind,
+                images = if (kind == PayKind.Images) parsePayImages(box) else emptyList(),
             )
         } else {
             val priceBox = box.selectFirst(".price-box")
@@ -320,9 +346,26 @@ object PostDetailParser {
                 soldText = soldText,
                 vipHints = vipHints,
                 hasCashier = box.selectFirst("a.cashier-link") != null,
+                kind = kind,
+                // 预览图 = 站点给的模糊封面（.pay-thumb）；购买前页面上本来就只有它
+                teaserImageUrl = box.selectFirst(".pay-thumb img")?.let { SiteParser.imageUrl(it) },
+                hintText = box.selectFirst(".pay-thumb .abs-center")?.text()?.trim()
+                    ?.replace(Regex("\\s+"), " ")?.ifBlank { null },
             )
         }
     }
+
+    /** 付费图片图库（.imgbox-container 内的轮播项；原图取 data-full-url，缺省回退懒加载地址） */
+    private fun parsePayImages(box: Element): List<PayImage> =
+        box.select(".imgbox-container .swiper-slide").mapNotNull { slide ->
+            val img = slide.selectFirst("img") ?: return@mapNotNull null
+            val full = img.attr("data-full-url").takeIf { it.startsWith("http") }
+                ?: SiteParser.imageUrl(img) ?: return@mapNotNull null
+            PayImage(
+                url = full,
+                label = slide.selectFirst("badge")?.text()?.trim()?.ifBlank { null },
+            )
+        }
 
     // ---------- 作者卡 ----------
 

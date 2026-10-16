@@ -1,5 +1,6 @@
 package top.sakuraxy.client.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Visibility
@@ -174,6 +176,31 @@ fun ErrorRetry(message: String, onRetry: () -> Unit, modifier: Modifier = Modifi
 @Composable
 fun CenterLoading(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+}
+
+/**
+ * 封面默认底图：文章/资源没有封面、或封面加载失败时显示（图片图标 + 淡色底），
+ * 避免出现空白块。用法：垫在 AsyncImage 下层，失败时它自然露出。
+ */
+@Composable
+fun CoverPlaceholder(
+    modifier: Modifier = Modifier,
+    iconSize: androidx.compose.ui.unit.Dp = 40.dp,
+    container: Color = MaterialTheme.colorScheme.surfaceVariant,
+) {
+    Box(
+        modifier
+            .fillMaxSize()
+            .background(container),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.Outlined.Image,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(iconSize),
+        )
+    }
 }
 
 @Composable

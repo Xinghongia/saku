@@ -35,7 +35,7 @@ import top.sakuraxy.client.core.UserStat
 /** 等级图标（站点主题素材，与网页同源）：user-level-N.png */
 private const val LEVEL_ICON_URL = "https://www.sakuraxy.top/wp-content/themes/zibll/img/user-level-%d.png"
 
-/** 圆形头像：加载失败/为空时退回人形占位图标 */
+/** 圆形头像：人形占位图标为底（地址为空或加载失败时都露出它，不会出现空白圆） */
 @Composable
 fun UserAvatar(
     url: String?,
@@ -55,20 +55,20 @@ fun UserAvatar(
                 } else Modifier
             ),
     ) {
-        if (!url.isNullOrBlank()) {
-            AsyncImage(
-                model = url,
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // 占位图标压在底层：图片加载中/失败时自然露出（AsyncImage 失败不绘制任何内容）
+            Icon(
+                Icons.Outlined.Person,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().clip(shape),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(size * 0.55f),
             )
-        } else {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(
-                    Icons.Outlined.Person,
+            if (!url.isNullOrBlank()) {
+                AsyncImage(
+                    model = url,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(size * 0.55f),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(shape),
                 )
             }
         }

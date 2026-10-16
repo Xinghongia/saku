@@ -1,18 +1,24 @@
 package top.sakuraxy.client.ui.detail
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,8 +27,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -47,25 +55,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import top.sakuraxy.client.core.Html
 import top.sakuraxy.client.core.MiniPost
 import top.sakuraxy.client.core.PayBox
 import top.sakuraxy.client.core.PayDownload
+import top.sakuraxy.client.core.PayImage
+import top.sakuraxy.client.core.PayKind
 import top.sakuraxy.client.core.PostAuthorCard
 import top.sakuraxy.client.core.PostComment
 import top.sakuraxy.client.core.PostHeader
 import top.sakuraxy.client.core.StarRating
+import top.sakuraxy.client.ui.AndroidActions
+import top.sakuraxy.client.ui.components.CoverPlaceholder
 import top.sakuraxy.client.ui.components.LevelBadge
 import top.sakuraxy.client.ui.components.MedalChips
 import top.sakuraxy.client.ui.components.StatsRow
 import top.sakuraxy.client.ui.components.UserAvatar
+import top.sakuraxy.client.vm.DetailViewModel
 
 /**
  * 详情页各区块（对齐网页文章页 2026-10-16 实测结构）：
@@ -170,8 +187,12 @@ fun PayCard(
     pay: PayBox,
     resolvingHref: String?,
     busy: Boolean,
+    qr: Map<String, DetailViewModel.QrState>,
     onBuy: () -> Unit,
     onResolve: (PayDownload) -> Unit,
+    onOpenImage: (PayImage) -> Unit,
+    onShowQrLink: (PayImage, String) -> Unit,
+    onRetryQr: (String) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -182,10 +203,42 @@ fun PayCard(
             PayBox.Free -> Unit
 
             is PayBox.Unpaid -> Column(Modifier.padding(16.dp)) {
+                // 付费图片型：站点给的付款前预览（模糊封面 + 「付费后查看」提示）
+                if (pay.kind == PayKind.Images && pay.teaserImageUrl != null) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                    ) {
+                        AsyncImage(
+                            model = pay.teaserImageUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(
+                                    // blur 仅 API 31+ 生效；旧机型靠深色遮罩 + 文案体现「未解锁」
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        Modifier.blur(18.dp)
+                                    } else Modifier,
+                                ),
+                        )
+                        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+                        Text(
+                            text = pay.hintText ?: "付费后查看图片",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.Center).padding(horizontal = 16.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer) {
                         Text(
-                            "付费资源",
+                            if (pay.kind == PayKind.Images) "付费图片" else "付费资源",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -235,6 +288,17 @@ fun PayCard(
             is PayBox.Paid -> Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("已购买", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF2E7D32))
+                    if (pay.kind == PayKind.Images) {
+                        Spacer(Modifier.width(8.dp))
+                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
+                            Text(
+                                "付费图片",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
                     pay.soldText?.let {
                         Spacer(Modifier.weight(1f))
                         Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -244,6 +308,39 @@ fun PayCard(
                 InfoRow("订单号", pay.orderNo)
                 InfoRow("支付时间", pay.payTime)
                 InfoRow("支付金额", pay.payAmount)
+
+                // 图片型资源：站点渲染给已购用户的图片（网盘二维码截图），本地识别链接
+                if (pay.kind == PayKind.Images && pay.images.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(12.dp))
+                    Text("资源图片", style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "点击图片可全屏查看；已在本机识别出二维码里的网盘链接",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    // 两列铺满：缩略图宽度按卡片可用宽度算，保证同屏完整显示两张、不用横滑
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                        val gap = 10.dp
+                        val itemWidth = (maxWidth - gap) / 2
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                            items(pay.images, key = { it.url }) { image ->
+                                PayImageItem(
+                                    image = image,
+                                    width = itemWidth,
+                                    state = qr[image.url],
+                                    onOpen = { onOpenImage(image) },
+                                    onShowLink = { link -> onShowQrLink(image, link) },
+                                    onRetry = { onRetryQr(image.url) },
+                                )
+                            }
+                        }
+                    }
+                }
+
                 if (pay.downloads.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
                     HorizontalDivider()
@@ -268,6 +365,104 @@ fun PayCard(
                     }
                 }
             }
+        }
+    }
+}
+
+/** 一张付费图片：缩略图（点开全屏）+ 二维码识别状态行 */
+@Composable
+private fun PayImageItem(
+    image: PayImage,
+    width: Dp,
+    state: DetailViewModel.QrState?,
+    onOpen: () -> Unit,
+    onShowLink: (String) -> Unit,
+    onRetry: () -> Unit,
+) {
+    val context = LocalContext.current
+    val link = state?.link
+    Column(Modifier.width(width)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(onClick = onOpen),
+        ) {
+            CoverPlaceholder(container = MaterialTheme.colorScheme.surfaceContainerHighest)
+            AsyncImage(
+                model = image.url,
+                contentDescription = image.label?.let { "资源图片 $it" },
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            image.label?.let { label ->
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.55f),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
+                ) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        when {
+            state?.decoding == true -> Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp)
+                Spacer(Modifier.width(6.dp))
+                Text("识别中…", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            link != null -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Link,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(13.dp),
+                )
+                Spacer(Modifier.width(3.dp))
+                Text(
+                    "网盘链接",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onShowLink(link) }
+                        .padding(vertical = 2.dp),
+                )
+                Icon(
+                    Icons.Outlined.ContentCopy,
+                    contentDescription = "复制链接",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(15.dp)
+                        .clip(CircleShape)
+                        .clickable { AndroidActions.copyToClipboard(context, link) },
+                )
+            }
+
+            state?.failed == true -> Text(
+                "未识别到二维码 · 点击重试",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(onClick = onRetry)
+                    .padding(vertical = 2.dp),
+            )
+
+            else -> Text(
+                "点击查看",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -591,9 +786,10 @@ private fun MiniPostCard(post: MiniPost, onOpenPost: (Long) -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .height(84.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                .clip(RoundedCornerShape(10.dp)),
         ) {
+            // 无封面/加载失败时露出占位底图（与站点缩略占位一致的观感）
+            CoverPlaceholder(container = MaterialTheme.colorScheme.surfaceContainerHighest, iconSize = 28.dp)
             post.coverUrl?.let { cover ->
                 AsyncImage(
                     model = cover,

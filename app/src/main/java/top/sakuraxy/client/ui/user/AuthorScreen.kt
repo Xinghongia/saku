@@ -52,6 +52,7 @@ import top.sakuraxy.client.core.AuthorComment
 import top.sakuraxy.client.core.AuthorUserCard
 import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.ui.components.CenterLoading
+import top.sakuraxy.client.ui.components.CoverPlaceholder
 import top.sakuraxy.client.ui.components.EmptyHint
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.LevelBadge
@@ -156,12 +157,13 @@ private fun AuthorHeader(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column {
-            // 封面（矮条）
+            // 封面（矮条；无封面/加载失败时露出占位底图）
             Box(
                 Modifier
                     .fillMaxWidth()
                     .height(72.dp),
             ) {
+                CoverPlaceholder(iconSize = 22.dp)
                 if (!info.coverUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = info.coverUrl,

@@ -186,7 +186,13 @@ object SiteParser {
                 raw.startsWith("http") -> raw
                 else -> continue
             }
-            return normalized.substringBefore("?") // 去掉 query，交给图片库处理
+            // gravatar 系头像的查询串里带 d=（默认头像地址，站点设的 avatar-default.png）：
+            // 保留它才能在用户没设头像时拿到站点默认头像；其余图片去掉 query 交给图片库处理
+            return if (normalized.contains("geekzu.org") || normalized.contains("gravatar.com")) {
+                normalized
+            } else {
+                normalized.substringBefore("?")
+            }
         }
         return null
     }

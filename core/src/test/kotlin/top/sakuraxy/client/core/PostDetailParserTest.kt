@@ -73,6 +73,7 @@ class PostDetailParserTest {
         assertEquals(2, pay.vipHints.size)
         assertTrue(pay.vipHints.any { it.contains("黄金会员") })
         assertTrue(pay.vipHints.any { it.contains("免费") })
+        assertEquals(PayKind.Download, pay.kind)
     }
 
     @Test
@@ -122,6 +123,44 @@ class PostDetailParserTest {
         assertEquals(1, pay.downloads.size)
         assertEquals("夸克网盘", pay.downloads.first().label)
         assertTrue(pay.downloads.first().url.contains("/pay-download/26463"))
+        assertEquals(PayKind.Download, pay.kind)
+        assertTrue(pay.images.isEmpty())
+    }
+
+    // ---- 付费图片型（2026-10-16 实测新形态：36023 已购给二维码图库 / 36018 未购给模糊预览） ----
+
+    @Test
+    fun `已购图片资源：图库列表与订单信息`() {
+        val detail = PostDetailParser.parsePostDetail(fixture("post_pay_images_sample.html"))
+        val pay = detail.payBox
+        assertTrue(pay is PayBox.Paid)
+        pay as PayBox.Paid
+        assertEquals(PayKind.Images, pay.kind)
+        assertEquals(5, pay.orderType)
+        assertEquals("2600000000000000000", pay.orderNo)
+        assertEquals("2026-10-16 16:18:27", pay.payTime)
+        assertEquals("1", pay.payAmount)
+        assertEquals(2, pay.images.size)
+        assertEquals(listOf("1/2", "2/2"), pay.images.map { it.label })
+        assertTrue(pay.images[0].url.endsWith("demo-paid-image-1.png"))
+        assertTrue(pay.images[1].url.endsWith("demo-paid-image-2.png"))
+        // 图片型没有下载按钮（两种资源形态二选一）
+        assertTrue(pay.downloads.isEmpty())
+    }
+
+    @Test
+    fun `未购图片资源：预览图与付费后查看提示`() {
+        val detail = PostDetailParser.parsePostDetail(fixture("post_pay_images_unpaid_sample.html"))
+        val pay = detail.payBox
+        assertTrue(pay is PayBox.Unpaid)
+        pay as PayBox.Unpaid
+        assertEquals(PayKind.Images, pay.kind)
+        assertEquals(5, pay.orderType)
+        assertEquals("1", pay.price)
+        assertEquals("积分", pay.unit)
+        assertTrue(pay.hasCashier)
+        assertTrue(pay.teaserImageUrl!!.endsWith("demo-paid-cover.png"))
+        assertTrue(pay.hintText!!.contains("请付费后查看"))
     }
 
     // ---- 匿名 ----

@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import top.sakuraxy.client.SakuApp
 import top.sakuraxy.client.ui.components.CenterLoading
+import top.sakuraxy.client.ui.components.CoverPlaceholder
 import top.sakuraxy.client.ui.components.ErrorRetry
 import top.sakuraxy.client.ui.components.SakuTopAppBar
 import top.sakuraxy.client.ui.components.UserAvatar
@@ -144,6 +145,7 @@ fun EditProfileScreen(app: SakuApp, onBack: () -> Unit) {
                                 .height(120.dp)
                                 .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
                         ) {
+                            CoverPlaceholder(iconSize = 28.dp)
                             if (!state.coverUrl.isNullOrBlank()) {
                                 AsyncImage(
                                     model = state.coverUrl,

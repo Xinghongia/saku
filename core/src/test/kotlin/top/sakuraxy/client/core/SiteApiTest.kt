@@ -155,4 +155,24 @@ class SiteApiTest {
         assertEquals("樱 玄夜", SiteParser.nameFromAvatarAlt("樱 玄夜的作者的 ta 头像-SakuraXy"))
         assertNull(SiteParser.nameFromAvatarAlt(""))
     }
+
+    // ---------- 图片地址 ----------
+
+    @Test
+    fun `gravatar 头像保留查询串以便拿到站点默认头像，其余图片去掉 query`() {
+        val avatar = org.jsoup.Jsoup.parse(
+            """<img class="avatar" data-src="//sdn.geekzu.org/avatar/abc123?s=96&d=https%3A%2F%2Fwww.example.com%2Fdefault.png">""",
+        ).selectFirst("img")!!
+
+        assertEquals(
+            "https://sdn.geekzu.org/avatar/abc123?s=96&d=https%3A%2F%2Fwww.example.com%2Fdefault.png",
+            SiteParser.imageUrl(avatar),
+        )
+
+        val cover = org.jsoup.Jsoup.parse(
+            """<img data-src="https://www.example.com/uploads/2026/10/cover-800x450.jpg?ver=2">""",
+        ).selectFirst("img")!!
+
+        assertEquals("https://www.example.com/uploads/2026/10/cover-800x450.jpg", SiteParser.imageUrl(cover))
+    }
 }

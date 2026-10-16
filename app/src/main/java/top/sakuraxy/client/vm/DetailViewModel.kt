@@ -8,17 +8,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import top.sakuraxy.client.SakuApp
+import top.sakuraxy.client.PayImageQr
 import top.sakuraxy.client.core.AjaxResult
 import top.sakuraxy.client.core.CashierInfo
 import top.sakuraxy.client.core.ContentBlock
 import top.sakuraxy.client.core.ContentParser
 import top.sakuraxy.client.core.Golink
+import top.sakuraxy.client.core.PayBox
 import top.sakuraxy.client.core.PayDownload
+import top.sakuraxy.client.core.PayKind
 import top.sakuraxy.client.core.PostComment
 import top.sakuraxy.client.core.PostDetail
 import top.sakuraxy.client.core.Site
@@ -43,6 +48,9 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
 
     /** 待提交的评论（等待滑块验证） */
     data class PendingComment(val content: String, val parent: Long)
+
+    /** 付费图片的二维码识别状态（键 = 图片地址） */
+    data class QrState(val decoding: Boolean = false, val link: String? = null, val failed: Boolean = false)
 
     data class UiState(
         val loading: Boolean = true,
@@ -76,6 +84,8 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
         val commentSuccessTick: Int = 0,
         /** 收银台确认框数据（积分购买） */
         val cashier: CashierInfo? = null,
+        /** 付费图片的二维码识别状态（键 = 图片地址；已购图片型专用） */
+        val qr: Map<String, QrState> = emptyMap(),
         val resolvingHref: String? = null,
         val resolved: ResolvedLink? = null,
         val resolveError: String? = null,
@@ -143,6 +153,7 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
                         commentsHasMore = detail.commentPage?.nextPageUrl != null,
                     )
                 }
+                autoDecodeQr(detail)
             }
             .onFailure { _state.update { s -> s.copy(message = "页面信息加载失败：${it.message ?: "网络异常"}") } }
     }
@@ -396,6 +407,44 @@ class DetailViewModel(private val app: SakuApp, private val postId: Long) : View
     }
 
     fun dismissCashier() = _state.update { it.copy(cashier = null) }
+
+    // ---------- 付费图片的二维码识别 ----------
+
+    /** 同时最多 2 张图在解码（图片本身很小，纯粹克制起见） */
+    private val qrSemaphore = Semaphore(2)
+
+    /** 已购图片型资源：自动识别前 8 张（更多时点开哪张解哪张；失败只手动重试） */
+    private fun autoDecodeQr(detail: PostDetail) {
+        val pay = detail.payBox as? PayBox.Paid ?: return
+        if (pay.kind != PayKind.Images) return
+        pay.images.take(8).forEach { image -> decodeQr(image.url) }
+    }
+
+    /** 解码单张图（幂等：已有终态/在途的地址直接跳过——购买后重载、登录态刷新都会走到这） */
+    fun decodeQr(url: String) {
+        val existing = _state.value.qr[url]
+        if (existing != null && (existing.decoding || existing.link != null || existing.failed)) return
+        _state.update { it.copy(qr = it.qr + (url to QrState(decoding = true))) }
+        viewModelScope.launch {
+            val link = qrSemaphore.withPermit {
+                runCatching { PayImageQr.fetchAndDecode(app.client.http, url) }.getOrNull()
+            }
+            _state.update { s ->
+                s.copy(qr = s.qr + (url to QrState(decoding = false, link = link, failed = link == null)))
+            }
+        }
+    }
+
+    /** 识别失败后的手动重试（先清旧状态再解） */
+    fun retryQr(url: String) {
+        if (_state.value.qr[url]?.decoding == true) return
+        _state.update { it.copy(qr = it.qr - url) }
+        decodeQr(url)
+    }
+
+    /** 已识别的二维码链接 → 复用通用「链接」对话框（复制/浏览器打开） */
+    fun showQrLink(label: String?, url: String) =
+        _state.update { it.copy(resolved = ResolvedLink(label ?: "网盘链接", url)) }
 
     // ---------- 评论 ----------
 

@@ -405,6 +405,8 @@ private fun ProfileHeaderCard(
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
                 ) {
+                    // 主题色垫底：没设封面或封面加载失败时都不会出现空白块
+                    Canvas(Modifier.fillMaxSize()) { drawRect(coverFallback) }
                     if (!overview.coverUrl.isNullOrBlank()) {
                         AsyncImage(
                             model = overview.coverUrl,
@@ -412,8 +414,6 @@ private fun ProfileHeaderCard(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
                         )
-                    } else {
-                        Canvas(Modifier.fillMaxSize()) { drawRect(coverFallback) }
                     }
                 }
                 // 名字 + 等级：贴封面底边（分界线上方），头像正右侧

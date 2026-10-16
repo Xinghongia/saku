@@ -1,6 +1,5 @@
 package top.sakuraxy.client.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,13 +49,14 @@ fun PostCardItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        // 封面
+        // 封面（无封面或加载失败时露出手动占位底图，不留空白块）
         Box(
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
         ) {
+            CoverPlaceholder()
             if (card.coverUrl != null) {
                 AsyncImage(
                     model = card.coverUrl,
@@ -65,19 +64,6 @@ fun PostCardItem(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
-            } else {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "无封面",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
             }
             card.badge?.let { badge ->
                 MiniChip(
@@ -133,15 +119,8 @@ fun PostCardItem(
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (card.authorAvatar != null) {
-                    AsyncImage(
-                        model = card.authorAvatar,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape),
-                    )
+                if (card.authorName != null || card.authorAvatar != null) {
+                    UserAvatar(url = card.authorAvatar, size = 20.dp)
                     Spacer(Modifier.width(6.dp))
                 }
                 card.authorName?.let { name ->

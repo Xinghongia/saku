@@ -1,6 +1,9 @@
 package top.sakuraxy.client.ui.detail
 
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +21,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,14 +45,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import top.sakuraxy.client.SakuApp
@@ -55,6 +65,7 @@ import top.sakuraxy.client.core.CashierInfo
 import top.sakuraxy.client.core.ContentBlock
 import top.sakuraxy.client.core.Html
 import top.sakuraxy.client.core.PayBox
+import top.sakuraxy.client.core.PayImage
 import top.sakuraxy.client.core.PostComment
 import top.sakuraxy.client.core.SiteParser
 import top.sakuraxy.client.ui.AndroidActions
@@ -87,6 +98,8 @@ fun DetailScreen(
     val context = LocalContext.current
     val linkColor = MaterialTheme.colorScheme.primary
     var replyTo by remember { mutableStateOf<PostComment?>(null) }
+    /** 全屏查看的付费图片（null = 未打开） */
+    var viewerImage by remember { mutableStateOf<PayImage?>(null) }
 
     fun handleLink(url: String) {
         val linkedId = SiteParser.postIdFromUrl(url)
@@ -241,15 +254,24 @@ fun DetailScreen(
                     }
                 }
 
-                // 付费卡（未购 = 积分购买；已购 = 订单信息 + 网盘下载）
+                // 付费卡（未购 = 积分购买；已购 = 订单信息 + 下载按钮 / 付费图片）
                 if (detail != null && detail.payBox !is PayBox.Free) {
                     item {
                         PayCard(
                             pay = detail.payBox,
                             resolvingHref = state.resolvingHref,
                             busy = state.busyKey != null,
+                            qr = state.qr,
                             onBuy = vm::openCashier,
                             onResolve = vm::resolveDownload,
+                            onOpenImage = { image ->
+                                viewerImage = image
+                                vm.decodeQr(image.url)
+                            },
+                            onShowQrLink = { image, link ->
+                                vm.showQrLink(image.label?.let { "网盘二维码 $it" } ?: "网盘二维码", link)
+                            },
+                            onRetryQr = vm::retryQr,
                         )
                     }
                 }
@@ -419,10 +441,20 @@ fun DetailScreen(
 
     if (state.siteOnlyHint) SiteOnlyDialog(onDismiss = vm::dismissSiteOnlyHint)
 
+    // 付费图片全屏查看（底部同时给出已识别的二维码链接）
+    viewerImage?.let { image ->
+        PayImageViewerDialog(
+            image = image,
+            qr = state.qr[image.url],
+            onRetry = { vm.retryQr(image.url) },
+            onDismiss = { viewerImage = null },
+        )
+    }
+
     state.resolved?.let { link ->
         AlertDialog(
             onDismissRequest = vm::dismissResolved,
-            title = { Text("下载链接（${link.label}）") },
+            title = { Text("链接（${link.label}）") },
             text = { Text(link.url, style = MaterialTheme.typography.bodySmall) },
             confirmButton = {
                 TextButton(
@@ -518,6 +550,96 @@ private fun ConfirmBuyDialog(
             TextButton(onClick = onDismiss, enabled = !busy) { Text("取消") }
         },
     )
+}
+
+/**
+ * 付费图片全屏查看器：黑底 Fit 展示原图（也可自己截图留用），
+ * 底部给二维码识别状态与已解出的网盘链接（复制 / 浏览器打开）；点任意空白处关闭。
+ */
+@Composable
+private fun PayImageViewerDialog(
+    image: PayImage,
+    qr: DetailViewModel.QrState?,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss,
+                ),
+        ) {
+            AsyncImage(
+                model = image.url,
+                contentDescription = image.label?.let { "资源图片 $it" },
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 40.dp, bottom = 140.dp),
+            )
+            Column(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                image.label?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White.copy(alpha = 0.7f),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+                val link = qr?.link
+                when {
+                    link != null -> {
+                        Text(
+                            link,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            FilledTonalButton(onClick = { AndroidActions.copyToClipboard(context, link) }) {
+                                Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("复制链接")
+                            }
+                            OutlinedButton(onClick = { AndroidActions.openInBrowser(context, link) }) {
+                                Text("浏览器打开")
+                            }
+                        }
+                    }
+
+                    qr?.decoding == true -> Text(
+                        "正在识别二维码…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
+
+                    qr?.failed == true -> TextButton(onClick = onRetry) {
+                        Text("未识别到二维码，点此重试")
+                    }
+
+                    else -> Unit
+                }
+            }
+        }
+    }
 }
 
 /** 段落文本 + 可点击链接（站内文章链接跳转进 App，其余打开浏览器）；链接色随主题 */
