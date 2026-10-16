@@ -92,6 +92,7 @@ class UserPanelParserTest {
         val balance = UserCenterParser.parseBalance(fixture("user_center_balance_sample.html"))
         assertEquals("0", balance.balance)
         assertEquals("116", balance.points)
+        assertFalse(balance.checkedIn)
         assertTrue(balance.records.isNotEmpty())
         val first = balance.records.first()
         assertEquals("签到奖励", first.badge)
@@ -110,6 +111,7 @@ class UserPanelParserTest {
         val balance = UserCenterParser.parseBalance(fixture("user_center_balance_checkedin_sample.html"))
         assertEquals("0", balance.balance)
         assertEquals("120", balance.points)
+        assertTrue(balance.checkedIn)
         assertTrue(balance.records.isNotEmpty())
     }
 

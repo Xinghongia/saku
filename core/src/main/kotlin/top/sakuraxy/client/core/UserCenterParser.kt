@@ -112,6 +112,8 @@ data class BalancePanel(
     val pendingIn: String?,
     val points: String?,
     val records: List<PointsRecord>,
+    /** 今日是否已签到（积分卡头部链接：签到领积分 / 今日已签到） */
+    val checkedIn: Boolean = false,
 )
 
 /** 会员档位（黄金/钻石） */
@@ -397,6 +399,8 @@ object UserCenterParser {
             pendingIn = pendingIn,
             points = points,
             records = records,
+            // 积分卡头部：已签到 = a.checkin-details-link（今日已签到）；未签到 = a.initiate-checkin（签到领积分）
+            checkedIn = section.selectFirst("a.checkin-details-link") != null,
         )
     }
 

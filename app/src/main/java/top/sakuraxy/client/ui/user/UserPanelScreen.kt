@@ -370,8 +370,14 @@ private fun BalancePanel(app: SakuApp) {
                         AssetBigCard("余额", "¥${balance.balance ?: "0"}", "待转入 ${balance.pendingIn ?: "0"}", Modifier.weight(1f)) {
                             siteOnly = true
                         }
-                        AssetBigCard("积分", balance.points ?: "0", null, Modifier.weight(1f)) {
-                            viewModel.checkin()
+                        AssetBigCard(
+                            label = "积分",
+                            value = balance.points ?: "0",
+                            sub = if (balance.checkedIn) "今日已签到" else "点击签到",
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            // 已签到不再发起签到（站点会拒绝）；签到明细弹窗未实现，先只显示状态
+                            if (!balance.checkedIn) viewModel.checkin()
                         }
                     }
                     if (balance.records.isNotEmpty()) {
